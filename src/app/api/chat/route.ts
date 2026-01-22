@@ -99,7 +99,7 @@ export async function POST(req: Request) {
 
         // Use generateText for non-streaming reliable response
         const result = await generateText({
-            model: google("gemini-2.0-flash-lite-preview-02-05"),
+            model: google("gemini-2.5-flash-lite-preview-06-17"),
             system: enhancedPrompt,
             messages,
         });
