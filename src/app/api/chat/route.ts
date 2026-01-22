@@ -30,8 +30,10 @@ const SYSTEM_PROMPT = `あなたは「ToDoManager AIアシスタント」、ユ�
 
 忙しい親が日々のスケジュールを動的に管理するのを助けます。状況や文脈の変化に応じてスケジュールをインテリジェントに更新します。
 
-現在のユーザーコンテキスト:
+現在のユーザーコンテキスト（デフォルト値）:
 ${JSON.stringify(defaultUserContext, null, 2)}
+
+※「ユーザー定義のコンテキスト」が提供された場合は、そちらを優先してください。
 
 現在の日時: ${new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}
 
@@ -77,10 +79,15 @@ export const maxDuration = 30;
 
 export async function POST(req: Request) {
     try {
-        const { messages, currentSchedule } = await req.json();
+        const { messages, currentSchedule, customInstructions } = await req.json();
 
         // Enhance the system prompt with current schedule if available
         let enhancedPrompt = SYSTEM_PROMPT;
+
+        if (customInstructions) {
+            enhancedPrompt += `\n\n# ユーザー定義のコンテキスト\n以下の情報を優先して参照してください:\n${customInstructions}`;
+        }
+
         if (currentSchedule && currentSchedule.length > 0) {
             enhancedPrompt += `\n\n現在のスケジュール:\n${JSON.stringify(currentSchedule, null, 2)}`;
         }

@@ -9,23 +9,21 @@ import { Card } from "@/components/ui/card";
 import { Send, Bot, User, Loader2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Task, ScheduleUpdate } from "@/lib/types";
+import { VoiceRecorder } from "./voice-recorder";
+
+import { useChatHistory, useCustomInstructions } from "@/hooks/use-local-storage";
 
 interface ChatInterfaceProps {
     currentSchedule: Task[];
     onScheduleUpdate: (update: ScheduleUpdate) => void;
 }
 
-interface ChatMessage {
-    id: string;
-    role: "user" | "assistant";
-    content: string;
-}
-
 export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfaceProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
+    const { messages, addMessage, isLoading: isHistoryLoading } = useChatHistory();
+    const { value: customInstructions } = useCustomInstructions();
     const [input, setInput] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
+    const [isApiLoading, setIsApiLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
 
     // Auto-scroll to bottom when new messages arrive
@@ -37,29 +35,37 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        if (!input.trim() || isLoading) return;
+        if (!input.trim() || isApiLoading) return;
 
-        const userMessage: ChatMessage = {
-            id: `user-${Date.now()}`,
+        // Add user message to history
+        const userMsg = addMessage({
             role: "user",
-            content: input.trim(),
-        };
+            content: input.trim()
+        });
 
-        setMessages((prev) => [...prev, userMessage]);
         setInput("");
-        setIsLoading(true);
+        setIsApiLoading(true);
         setError(null);
 
         try {
+            // Prepare messages context (last 10 messages + new one)
+            const historyContext = messages.slice(-10).map(m => ({
+                role: m.role,
+                content: m.content
+            }));
+
+            historyContext.push({
+                role: userMsg.role,
+                content: userMsg.content
+            });
+
             const response = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    messages: [...messages, userMessage].map((m) => ({
-                        role: m.role,
-                        content: m.content,
-                    })),
+                    messages: historyContext,
                     currentSchedule,
+                    customInstructions,
                 }),
             });
 
@@ -69,13 +75,11 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
 
             const text = await response.text();
 
-            const assistantMessage: ChatMessage = {
-                id: `assistant-${Date.now()}`,
+            // Add assistant message to history
+            addMessage({
                 role: "assistant",
-                content: text,
-            };
-
-            setMessages((prev) => [...prev, assistantMessage]);
+                content: text
+            });
 
             // Try to parse the response as JSON schedule update
             try {
@@ -92,7 +96,7 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
         } catch (err) {
             setError(err instanceof Error ? err : new Error("不明なエラー"));
         } finally {
-            setIsLoading(false);
+            setIsApiLoading(false);
         }
     };
 
@@ -193,7 +197,7 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
                         </div>
                     ))}
 
-                    {isLoading && (
+                    {isApiLoading && (
                         <div className="flex gap-3 justify-start">
                             <Avatar className="w-8 h-8 bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center">
                                 <Bot className="w-4 h-4 text-white" />
@@ -220,19 +224,23 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
             {/* Input area */}
             <form onSubmit={handleSubmit} className="p-4 border-t bg-background/80 backdrop-blur-sm">
                 <div className="flex gap-2">
+                    <VoiceRecorder
+                        onTranscription={(text) => setInput(prev => prev + text)}
+                        disabled={isApiLoading}
+                    />
                     <Input
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder="状況を入力してください..."
-                        disabled={isLoading}
+                        disabled={isApiLoading}
                         className="flex-1 bg-muted border-0 focus-visible:ring-1 focus-visible:ring-primary"
                     />
                     <Button
                         type="submit"
-                        disabled={isLoading || !input.trim()}
+                        disabled={isApiLoading || !input.trim()}
                         className="bg-gradient-to-r from-primary to-purple-500 hover:opacity-90"
                     >
-                        {isLoading ? (
+                        {isApiLoading ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
                             <Send className="w-4 h-4" />

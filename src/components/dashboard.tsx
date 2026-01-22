@@ -5,6 +5,7 @@ import { Timeline } from "./timeline";
 import { ChatInterface } from "./chat-interface";
 import { Task, ScheduleUpdate } from "@/lib/types";
 import { Calendar, MessageSquare, Zap, Settings } from "lucide-react";
+import { SettingsDialog } from "./settings-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -117,8 +118,12 @@ export function Dashboard() {
     const pendingTasks = tasks.filter((t) => t.status === "pending").length;
     const completedTasks = tasks.filter((t) => t.status === "completed").length;
 
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
     return (
         <div className="flex flex-col h-screen bg-gradient-to-br from-background via-background to-primary/5">
+            <SettingsDialog isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+
             {/* Header */}
             <header className="flex items-center justify-between px-6 py-4 border-b bg-background/80 backdrop-blur-sm">
                 <div className="flex items-center gap-4">
@@ -140,7 +145,12 @@ export function Dashboard() {
                         <p className="text-2xl font-bold text-foreground">{currentTime}</p>
                         <p className="text-xs text-muted-foreground">{currentDate}</p>
                     </div>
-                    <Button variant="ghost" size="icon" className="rounded-full">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="rounded-full"
+                        onClick={() => setIsSettingsOpen(true)}
+                    >
                         <Settings className="w-5 h-5" />
                     </Button>
                 </div>
