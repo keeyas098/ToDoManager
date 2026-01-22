@@ -20,7 +20,7 @@ interface ChatInterfaceProps {
 
 export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfaceProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
-    const { messages, addMessage, isLoading: isHistoryLoading } = useChatHistory();
+    const { messages, addMessage, getConversationSummary, isLoading: isHistoryLoading } = useChatHistory();
     const { value: customInstructions } = useCustomInstructions();
     const [input, setInput] = useState("");
     const [isApiLoading, setIsApiLoading] = useState(false);
@@ -59,6 +59,9 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
                 content: userMsg.content
             });
 
+            // Get conversation summary for context
+            const conversationSummary = getConversationSummary();
+
             const response = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -66,6 +69,7 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
                     messages: historyContext,
                     currentSchedule,
                     customInstructions,
+                    conversationSummary,
                 }),
             });
 

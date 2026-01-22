@@ -118,11 +118,65 @@ export function useChatHistory() {
         [value]
     );
 
+    // 会話サマリーを生成（最新10件 + 重要なポイント）
+    const getConversationSummary = useCallback(() => {
+        if (value.length === 0) return "";
+
+        const recent = value.slice(-10);
+        const summaryLines: string[] = [];
+
+        // 最近の会話をまとめる
+        summaryLines.push("# 最近の会話履歴");
+        recent.forEach((msg, i) => {
+            const role = msg.role === "user" ? "ユーザー" : "AI";
+            const content = msg.content.length > 100
+                ? msg.content.substring(0, 100) + "..."
+                : msg.content;
+            summaryLines.push(`${i + 1}. ${role}: ${content}`);
+        });
+
+        // 学習した習慣パターンを抽出
+        const habits = extractHabits(value);
+        if (habits.length > 0) {
+            summaryLines.push("\n# 学習した習慣パターン");
+            habits.forEach(habit => summaryLines.push(`- ${habit}`));
+        }
+
+        return summaryLines.join("\n");
+    }, [value]);
+
+    // 習慣パターンを抽出
+    const extractHabits = (messages: ChatMessage[]): string[] => {
+        const habits: string[] = [];
+        const habitKeywords = [
+            /毎朝|毎晩|毎日|いつも|習慣|ルーティン/,
+            /月曜|火曜|水曜|木曜|金曜|土曜|日曜/,
+            /[0-9]{1,2}時|[0-9]{1,2}:[0-9]{2}/,
+        ];
+
+        messages.forEach(msg => {
+            if (msg.role === "user") {
+                habitKeywords.forEach(regex => {
+                    if (regex.test(msg.content) && msg.content.length < 100) {
+                        // 短いメッセージで習慣に関する言及があれば記録
+                        if (!habits.includes(msg.content)) {
+                            habits.push(msg.content);
+                        }
+                    }
+                });
+            }
+        });
+
+        // 最大5件まで
+        return habits.slice(-5);
+    };
+
     return {
         messages: value,
         addMessage,
         clearHistory,
         getRecentMessages,
+        getConversationSummary,
         isLoading,
     };
 }

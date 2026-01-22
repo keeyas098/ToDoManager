@@ -79,7 +79,7 @@ export const maxDuration = 30;
 
 export async function POST(req: Request) {
     try {
-        const { messages, currentSchedule, customInstructions } = await req.json();
+        const { messages, currentSchedule, customInstructions, conversationSummary } = await req.json();
 
         // Enhance the system prompt with current schedule if available
         let enhancedPrompt = SYSTEM_PROMPT;
@@ -88,9 +88,14 @@ export async function POST(req: Request) {
             enhancedPrompt += `\n\n# ユーザー定義のコンテキスト\n以下の情報を優先して参照してください:\n${customInstructions}`;
         }
 
+        if (conversationSummary) {
+            enhancedPrompt += `\n\n# 会話履歴と学習した習慣\n${conversationSummary}`;
+        }
+
         if (currentSchedule && currentSchedule.length > 0) {
             enhancedPrompt += `\n\n現在のスケジュール:\n${JSON.stringify(currentSchedule, null, 2)}`;
         }
+
 
         // Use generateText for non-streaming reliable response
         const result = await generateText({
