@@ -119,6 +119,7 @@ export function Dashboard() {
     const completedTasks = tasks.filter((t) => t.status === "completed").length;
 
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState<"schedule" | "chat">("schedule");
 
     return (
         <div className="flex flex-col h-screen bg-gradient-to-br from-background via-background to-primary/5">
@@ -176,26 +177,50 @@ export function Dashboard() {
                 )}
             </div>
 
-            {/* Main content - Split view */}
+            {/* Mobile Tab Navigation - only visible on small screens */}
+            <div className="flex lg:hidden border-b bg-background/80">
+                <button
+                    onClick={() => setActiveTab("schedule")}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${activeTab === "schedule"
+                        ? "text-primary border-b-2 border-primary bg-primary/5"
+                        : "text-muted-foreground hover:text-foreground"
+                        }`}
+                >
+                    <Calendar className="w-4 h-4" />
+                    スケジュール
+                </button>
+                <button
+                    onClick={() => setActiveTab("chat")}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${activeTab === "chat"
+                        ? "text-primary border-b-2 border-primary bg-primary/5"
+                        : "text-muted-foreground hover:text-foreground"
+                        }`}
+                >
+                    <MessageSquare className="w-4 h-4" />
+                    AIチャット
+                </button>
+            </div>
+
+            {/* Main content - Split view on desktop, tabs on mobile */}
             <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-                {/* Timeline section */}
-                <div className="flex-1 lg:w-1/2 border-b lg:border-b-0 lg:border-r overflow-hidden">
-                    <div className="flex items-center gap-2 px-4 py-3 border-b bg-background/50">
+                {/* Timeline section - hidden on mobile when chat tab is active */}
+                <div className={`flex-1 lg:w-1/2 lg:border-r overflow-hidden ${activeTab === "chat" ? "hidden lg:flex lg:flex-col" : "flex flex-col"}`}>
+                    <div className="hidden lg:flex items-center gap-2 px-4 py-3 border-b bg-background/50">
                         <Calendar className="w-4 h-4 text-primary" />
                         <h2 className="font-semibold text-foreground">今日のスケジュール</h2>
                     </div>
-                    <div className="h-[calc(100%-49px)]">
+                    <div className="flex-1 lg:h-[calc(100%-49px)]">
                         <Timeline tasks={tasks} />
                     </div>
                 </div>
 
-                {/* Chat section */}
-                <div className="flex-1 lg:w-1/2 overflow-hidden">
-                    <div className="flex items-center gap-2 px-4 py-3 border-b bg-background/50">
+                {/* Chat section - hidden on mobile when schedule tab is active */}
+                <div className={`flex-1 lg:w-1/2 overflow-hidden ${activeTab === "schedule" ? "hidden lg:flex lg:flex-col" : "flex flex-col"}`}>
+                    <div className="hidden lg:flex items-center gap-2 px-4 py-3 border-b bg-background/50">
                         <MessageSquare className="w-4 h-4 text-primary" />
                         <h2 className="font-semibold text-foreground">AIアシスタント</h2>
                     </div>
-                    <div className="h-[calc(100%-49px)]">
+                    <div className="flex-1 lg:h-[calc(100%-49px)]">
                         <ChatInterface
                             currentSchedule={tasks}
                             onScheduleUpdate={handleScheduleUpdate}

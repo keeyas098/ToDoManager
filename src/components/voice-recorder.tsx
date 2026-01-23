@@ -53,7 +53,11 @@ export function VoiceRecorder({ onTranscription, disabled }: VoiceRecorderProps)
                     });
 
                     if (!response.ok) {
-                        throw new Error("Transcription failed");
+                        const errorData = await response.json().catch(() => ({}));
+                        const errorMsg = errorData.error || "Transcription failed";
+                        console.error("Transcription API error:", errorMsg);
+                        alert(`音声認識エラー: ${errorMsg}`);
+                        return;
                     }
 
                     const data = await response.json();
@@ -61,6 +65,7 @@ export function VoiceRecorder({ onTranscription, disabled }: VoiceRecorderProps)
                         onTranscription(data.text);
                     } else if (data.error) {
                         console.error("Transcription error:", data.error);
+                        alert(`音声認識エラー: ${data.error}`);
                     }
                 } catch (error) {
                     console.error("Error sending audio:", error);
