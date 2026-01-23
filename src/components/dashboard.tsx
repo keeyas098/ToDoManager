@@ -202,25 +202,25 @@ export function Dashboard() {
             </div>
 
             {/* Main content - Split view on desktop, tabs on mobile */}
-            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+            <div className="flex-1 flex flex-col lg:flex-row min-h-0">
                 {/* Timeline section - hidden on mobile when chat tab is active */}
-                <div className={`flex-1 lg:w-1/2 lg:border-r overflow-hidden ${activeTab === "chat" ? "hidden lg:flex lg:flex-col" : "flex flex-col"}`}>
+                <div className={`flex-1 lg:w-1/2 lg:border-r min-h-0 ${activeTab === "chat" ? "hidden lg:flex lg:flex-col" : "flex flex-col"}`}>
                     <div className="hidden lg:flex items-center gap-2 px-4 py-3 border-b bg-background/50">
                         <Calendar className="w-4 h-4 text-primary" />
                         <h2 className="font-semibold text-foreground">今日のスケジュール</h2>
                     </div>
-                    <div className="flex-1 lg:h-[calc(100%-49px)]">
+                    <div className="flex-1 min-h-0 overflow-auto">
                         <Timeline tasks={tasks} />
                     </div>
                 </div>
 
                 {/* Chat section - hidden on mobile when schedule tab is active */}
-                <div className={`flex-1 lg:w-1/2 overflow-hidden ${activeTab === "schedule" ? "hidden lg:flex lg:flex-col" : "flex flex-col"}`}>
+                <div className={`flex-1 lg:w-1/2 min-h-0 ${activeTab === "schedule" ? "hidden lg:flex lg:flex-col" : "flex flex-col"}`}>
                     <div className="hidden lg:flex items-center gap-2 px-4 py-3 border-b bg-background/50">
                         <MessageSquare className="w-4 h-4 text-primary" />
                         <h2 className="font-semibold text-foreground">AIアシスタント</h2>
                     </div>
-                    <div className="flex-1 lg:h-[calc(100%-49px)]">
+                    <div className="flex-1 min-h-0 overflow-auto">
                         <ChatInterface
                             currentSchedule={tasks}
                             onScheduleUpdate={handleScheduleUpdate}
