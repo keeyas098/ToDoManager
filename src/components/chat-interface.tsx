@@ -10,6 +10,7 @@ import { Send, Bot, User, Loader2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Task, ScheduleUpdate } from "@/lib/types";
 import { VoiceRecorder } from "./voice-recorder";
+import { CollapsibleMessage } from "./collapsible-message";
 
 import { useChatHistory, useCustomInstructions } from "@/hooks/use-local-storage";
 
@@ -20,7 +21,7 @@ interface ChatInterfaceProps {
 
 export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfaceProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
-    const { messages, addMessage, getConversationSummary, isLoading: isHistoryLoading } = useChatHistory();
+    const { messages, addMessage, updateMessage, getConversationSummary, isLoading: isHistoryLoading } = useChatHistory();
     const { value: customInstructions } = useCustomInstructions();
     const [input, setInput] = useState("");
     const [isApiLoading, setIsApiLoading] = useState(false);
@@ -104,34 +105,26 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
         }
     };
 
-    const formatMessage = (content: string) => {
-        // Try to extract message from JSON response
+    // Format message content - extract text from JSON and format for display
+    const formatMessageContent = (content: string): string => {
         try {
             const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
             const jsonStr = jsonMatch ? jsonMatch[1].trim() : content.trim();
             const parsed = JSON.parse(jsonStr);
             if (parsed.message) {
-                return (
-                    <div className="space-y-3">
-                        <p>{parsed.message}</p>
-                        {parsed.reasoning && (
-                            <p className="text-xs text-muted-foreground italic border-l-2 border-primary/30 pl-2">
-                                {parsed.reasoning}
-                            </p>
-                        )}
-                        {parsed.tasks && parsed.tasks.length > 0 && (
-                            <div className="flex items-center gap-2 text-xs text-primary">
-                                <Sparkles className="w-3 h-3" />
-                                <span>{parsed.tasks.length}件のタスクを更新しました</span>
-                            </div>
-                        )}
-                    </div>
-                );
+                let result = parsed.message;
+                if (parsed.reasoning) {
+                    result += "\n\n💡 " + parsed.reasoning;
+                }
+                if (parsed.tasks && parsed.tasks.length > 0) {
+                    result += "\n\n✨ " + parsed.tasks.length + "件のタスクを更新しました";
+                }
+                return result;
             }
         } catch {
             // Not JSON, return as-is
         }
-        return <p className="whitespace-pre-wrap">{content}</p>;
+        return content;
     };
 
     return (
@@ -175,26 +168,28 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
                             )}
                         >
                             {message.role === "assistant" && (
-                                <Avatar className="w-8 h-8 bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center">
+                                <Avatar className="w-8 h-8 bg-gradient-to-br from-primary to-green-600 flex items-center justify-center flex-shrink-0">
                                     <Bot className="w-4 h-4 text-white" />
                                 </Avatar>
                             )}
 
-                            <Card
-                                className={cn(
-                                    "max-w-[85%] p-3",
-                                    message.role === "user"
-                                        ? "bg-primary text-primary-foreground"
-                                        : "bg-muted"
-                                )}
-                            >
-                                <div className="text-sm">
-                                    {formatMessage(message.content)}
-                                </div>
-                            </Card>
+                            {message.role === "user" ? (
+                                <CollapsibleMessage
+                                    content={message.content}
+                                    isUser={true}
+                                    onEdit={(newContent) => updateMessage(message.id, newContent)}
+                                    className="max-w-[85%] bg-primary text-primary-foreground"
+                                />
+                            ) : (
+                                <CollapsibleMessage
+                                    content={formatMessageContent(message.content)}
+                                    isUser={false}
+                                    className="max-w-[85%] bg-muted"
+                                />
+                            )}
 
                             {message.role === "user" && (
-                                <Avatar className="w-8 h-8 bg-muted flex items-center justify-center">
+                                <Avatar className="w-8 h-8 bg-muted flex items-center justify-center flex-shrink-0">
                                     <User className="w-4 h-4 text-muted-foreground" />
                                 </Avatar>
                             )}

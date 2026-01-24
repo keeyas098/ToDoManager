@@ -171,9 +171,21 @@ export function useChatHistory() {
         return habits.slice(-5);
     };
 
+    // メッセージを更新（編集用）
+    const updateMessage = useCallback(
+        (id: string, newContent: string) => {
+            const updatedMessages = value.map(msg =>
+                msg.id === id ? { ...msg, content: newContent } : msg
+            );
+            setValue(updatedMessages);
+        },
+        [value, setValue]
+    );
+
     return {
         messages: value,
         addMessage,
+        updateMessage,
         clearHistory,
         getRecentMessages,
         getConversationSummary,
