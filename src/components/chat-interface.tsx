@@ -2,7 +2,6 @@
 
 import { useRef, useEffect, useState, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
@@ -291,22 +290,37 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
 
             {/* Input area - compact on mobile */}
             <form onSubmit={handleSubmit} className="p-2 md:p-4 border-t bg-background/80 backdrop-blur-sm">
-                <div className="flex gap-1.5 md:gap-2">
+                <div className="flex gap-1.5 md:gap-2 items-end">
                     <VoiceRecorder
                         onTranscription={(text) => setInput(prev => prev + text)}
                         disabled={isApiLoading}
                     />
-                    <Input
+                    <textarea
                         value={input}
-                        onChange={(e) => setInput(e.target.value)}
+                        onChange={(e) => {
+                            setInput(e.target.value);
+                            // Auto-resize textarea
+                            e.target.style.height = 'auto';
+                            e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                        }}
+                        onKeyDown={(e) => {
+                            // Submit on Enter without Shift
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                if (input.trim() && !isApiLoading) {
+                                    handleSubmit(e as unknown as FormEvent<HTMLFormElement>);
+                                }
+                            }
+                        }}
                         placeholder="状況を入力..."
                         disabled={isApiLoading}
-                        className="flex-1 bg-muted border-0 focus-visible:ring-1 focus-visible:ring-primary text-sm md:text-base h-9 md:h-10"
+                        rows={1}
+                        className="flex-1 bg-muted border-0 rounded-md px-3 py-2 resize-none overflow-hidden focus:outline-none focus:ring-1 focus:ring-primary text-sm md:text-base min-h-[36px] md:min-h-[40px] max-h-[120px]"
                     />
                     <Button
                         type="submit"
                         disabled={isApiLoading || !input.trim()}
-                        className="bg-gradient-to-r from-primary to-purple-500 hover:opacity-90 h-9 w-9 md:h-10 md:w-10 p-0"
+                        className="bg-gradient-to-r from-primary to-purple-500 hover:opacity-90 h-9 w-9 md:h-10 md:w-10 p-0 flex-shrink-0"
                         size="icon"
                     >
                         {isApiLoading ? (

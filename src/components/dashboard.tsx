@@ -7,7 +7,6 @@ import { Task, ScheduleUpdate } from "@/lib/types";
 import { Calendar, MessageSquare, Zap, Settings } from "lucide-react";
 import { SettingsDialog } from "./settings-dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
 // Default demo schedule - Japanese
 const defaultTasks: Task[] = [
@@ -130,9 +129,6 @@ export function Dashboard() {
         }
     };
 
-    const pendingTasks = tasks.filter((t) => t.status === "pending").length;
-    const completedTasks = tasks.filter((t) => t.status === "completed").length;
-
     return (
         <div className="flex flex-col h-screen bg-gradient-to-br from-background via-background to-primary/5">
             <SettingsDialog isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
@@ -168,26 +164,6 @@ export function Dashboard() {
                     </Button>
                 </div>
             </header>
-
-            {/* Stats bar - compact on mobile */}
-            <div className="flex items-center gap-2 md:gap-4 px-3 py-1.5 md:px-6 md:py-3 border-b bg-muted/30 text-xs md:text-sm">
-                <Badge variant="secondary" className="gap-1 text-[10px] md:text-xs px-1.5 py-0.5 md:px-2 md:py-1">
-                    <Calendar className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                    {tasks.length} タスク
-                </Badge>
-                <Badge variant="outline" className="gap-1 border-yellow-500/30 text-yellow-600 text-[10px] md:text-xs px-1.5 py-0.5 md:px-2 md:py-1">
-                    {pendingTasks} 未完了
-                </Badge>
-                <Badge variant="outline" className="gap-1 border-green-500/30 text-green-600 text-[10px] md:text-xs px-1.5 py-0.5 md:px-2 md:py-1">
-                    {completedTasks} 完了
-                </Badge>
-                {lastUpdate && (
-                    <Badge variant="outline" className="gap-1 border-primary/30 text-primary ml-auto text-[10px] md:text-xs px-1.5 py-0.5 md:px-2 md:py-1">
-                        <Zap className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                        更新: {lastUpdate}
-                    </Badge>
-                )}
-            </div>
 
             {/* Mobile Tab Navigation - only visible on small screens */}
             <div className="flex lg:hidden border-b bg-background/80">
