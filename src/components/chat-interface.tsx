@@ -231,13 +231,13 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
                         <div
                             key={message.id}
                             className={cn(
-                                "flex gap-3",
+                                "flex gap-1.5 md:gap-3",
                                 message.role === "user" ? "justify-end" : "justify-start"
                             )}
                         >
                             {message.role === "assistant" && (
-                                <Avatar className="w-8 h-8 bg-gradient-to-br from-primary to-green-600 flex items-center justify-center flex-shrink-0">
-                                    <Bot className="w-4 h-4 text-white" />
+                                <Avatar className="w-6 h-6 md:w-8 md:h-8 bg-gradient-to-br from-primary to-green-600 flex items-center justify-center flex-shrink-0">
+                                    <Bot className="w-3 h-3 md:w-4 md:h-4 text-white" />
                                 </Avatar>
                             )}
 
@@ -246,19 +246,19 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
                                     content={message.content}
                                     isUser={true}
                                     onEdit={(newContent) => handleEditAndRegenerate(message.id, newContent)}
-                                    className="max-w-[85%] bg-primary text-primary-foreground"
+                                    className="max-w-[80%] md:max-w-[85%] bg-primary text-primary-foreground"
                                 />
                             ) : (
                                 <CollapsibleMessage
                                     content={formatMessageContent(message.content)}
                                     isUser={false}
-                                    className="max-w-[85%] bg-muted"
+                                    className="max-w-[80%] md:max-w-[85%] bg-muted"
                                 />
                             )}
 
                             {message.role === "user" && (
-                                <Avatar className="w-8 h-8 bg-muted flex items-center justify-center flex-shrink-0">
-                                    <User className="w-4 h-4 text-muted-foreground" />
+                                <Avatar className="w-6 h-6 md:w-8 md:h-8 bg-muted flex items-center justify-center flex-shrink-0">
+                                    <User className="w-3 h-3 md:w-4 md:h-4 text-muted-foreground" />
                                 </Avatar>
                             )}
                         </div>
@@ -315,12 +315,12 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
                         placeholder="状況を入力..."
                         disabled={isApiLoading}
                         rows={1}
-                        className="flex-1 bg-muted border-0 rounded-md px-3 py-2 resize-none overflow-hidden focus:outline-none focus:ring-1 focus:ring-primary text-sm md:text-base min-h-[36px] md:min-h-[40px] max-h-[120px]"
+                        className="flex-1 bg-muted border-0 rounded-md px-3 py-2 resize-none overflow-hidden focus:outline-none focus:ring-1 focus:ring-primary text-xs md:text-base min-h-[32px] md:min-h-[40px] max-h-[100px]"
                     />
                     <Button
                         type="submit"
                         disabled={isApiLoading || !input.trim()}
-                        className="bg-gradient-to-r from-primary to-purple-500 hover:opacity-90 h-9 w-9 md:h-10 md:w-10 p-0 flex-shrink-0"
+                        className="bg-gradient-to-r from-primary to-purple-500 hover:opacity-90 h-8 w-8 md:h-10 md:w-10 p-0 flex-shrink-0"
                         size="icon"
                     >
                         {isApiLoading ? (
@@ -330,6 +330,8 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
                         )}
                     </Button>
                 </div>
+                {/* Safe area spacer for mobile browser navigation */}
+                <div className="h-[env(safe-area-inset-bottom,0px)]" />
             </form>
         </div>
     );
