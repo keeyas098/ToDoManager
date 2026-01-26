@@ -19,8 +19,9 @@ export function CollapsibleMessage({ content, isUser, onEdit, className }: Colla
     const [editContent, setEditContent] = useState(content);
 
     // Count lines and determine if collapsible
+    // Only user messages can be collapsed - AI messages always show fully
     const lines = content.split("\n");
-    const isLong = lines.length > 3 || content.length > 200;
+    const isLong = isUser && (lines.length > 3 || content.length > 200);
 
     // Get preview (first 3 lines or 200 chars)
     const getPreview = () => {

@@ -33,7 +33,7 @@ const DEFAULT_INSTRUCTIONS = `# 家族構成
 
 interface UseLocalStorageReturn<T> {
     value: T;
-    setValue: (value: T) => void;
+    setValue: (value: T | ((prev: T) => T)) => void;
     isLoading: boolean;
 }
 
@@ -58,11 +58,20 @@ export function useLocalStorage<T>(
         }
     }, [key]);
 
+    // Use functional update to avoid stale closure issues
     const setValue = useCallback(
-        (newValue: T) => {
+        (newValue: T | ((prev: T) => T)) => {
             try {
-                setValueState(newValue);
-                localStorage.setItem(key, JSON.stringify(newValue));
+                if (typeof newValue === 'function') {
+                    setValueState(prev => {
+                        const updated = (newValue as (prev: T) => T)(prev);
+                        localStorage.setItem(key, JSON.stringify(updated));
+                        return updated;
+                    });
+                } else {
+                    setValueState(newValue);
+                    localStorage.setItem(key, JSON.stringify(newValue));
+                }
             } catch (error) {
                 console.error(`Error setting localStorage key "${key}":`, error);
             }
@@ -100,10 +109,11 @@ export function useChatHistory() {
                 id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 timestamp: Date.now(),
             };
-            setValue([...value, newMessage]);
+            // Use functional update to avoid stale closure
+            setValue((prev: ChatMessage[]) => [...prev, newMessage]);
             return newMessage;
         },
-        [value, setValue]
+        [setValue]
     );
 
     const clearHistory = useCallback(() => {
@@ -174,18 +184,47 @@ export function useChatHistory() {
     // メッセージを更新（編集用）
     const updateMessage = useCallback(
         (id: string, newContent: string) => {
-            const updatedMessages = value.map(msg =>
-                msg.id === id ? { ...msg, content: newContent } : msg
+            // Use functional update to avoid stale closure
+            setValue((prev: ChatMessage[]) =>
+                prev.map(msg =>
+                    msg.id === id ? { ...msg, content: newContent } : msg
+                )
             );
-            setValue(updatedMessages);
         },
-        [value, setValue]
+        [setValue]
+    );
+
+    // メッセージを編集し、それ以降のメッセージを削除（AI再生成用）
+    const editAndRegenerateMessage = useCallback(
+        (id: string, newContent: string): ChatMessage | null => {
+            let editedMessage: ChatMessage | null = null;
+
+            // Use functional update to avoid stale closure
+            setValue((prev: ChatMessage[]) => {
+                const messageIndex = prev.findIndex(msg => msg.id === id);
+                if (messageIndex === -1) return prev;
+
+                // Update the message and remove all messages after it
+                const updatedMessages = prev.slice(0, messageIndex + 1);
+                updatedMessages[messageIndex] = {
+                    ...updatedMessages[messageIndex],
+                    content: newContent
+                };
+
+                editedMessage = updatedMessages[messageIndex];
+                return updatedMessages;
+            });
+
+            return editedMessage;
+        },
+        [setValue]
     );
 
     return {
         messages: value,
         addMessage,
         updateMessage,
+        editAndRegenerateMessage,
         clearHistory,
         getRecentMessages,
         getConversationSummary,

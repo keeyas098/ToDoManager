@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Timeline } from "./timeline";
 import { ChatInterface } from "./chat-interface";
 import { Task, ScheduleUpdate } from "@/lib/types";
@@ -95,6 +95,33 @@ const defaultTasks: Task[] = [
 export function Dashboard() {
     const [tasks, setTasks] = useState<Task[]>(defaultTasks);
     const [lastUpdate, setLastUpdate] = useState<string | null>(null);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState<"schedule" | "chat">("schedule");
+
+    // Time state - initialized empty to avoid Hydration mismatch
+    const [currentTime, setCurrentTime] = useState<string>("");
+    const [currentDate, setCurrentDate] = useState<string>("");
+
+    // Update time on client side only
+    useEffect(() => {
+        const updateTime = () => {
+            setCurrentTime(new Date().toLocaleTimeString("ja-JP", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false,
+            }));
+            setCurrentDate(new Date().toLocaleDateString("ja-JP", {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+            }));
+        };
+
+        updateTime(); // Initial update
+        const interval = setInterval(updateTime, 1000); // Update every second
+
+        return () => clearInterval(interval);
+    }, []);
 
     const handleScheduleUpdate = (update: ScheduleUpdate) => {
         if (update.tasks && update.tasks.length > 0) {
@@ -103,75 +130,60 @@ export function Dashboard() {
         }
     };
 
-    const currentTime = new Date().toLocaleTimeString("ja-JP", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-    });
-
-    const currentDate = new Date().toLocaleDateString("ja-JP", {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-    });
-
     const pendingTasks = tasks.filter((t) => t.status === "pending").length;
     const completedTasks = tasks.filter((t) => t.status === "completed").length;
-
-    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState<"schedule" | "chat">("schedule");
 
     return (
         <div className="flex flex-col h-screen bg-gradient-to-br from-background via-background to-primary/5">
             <SettingsDialog isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
 
-            {/* Header */}
-            <header className="flex items-center justify-between px-6 py-4 border-b bg-background/80 backdrop-blur-sm">
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center shadow-lg shadow-primary/25">
-                            <Zap className="w-5 h-5 text-white" />
+            {/* Header - compact on mobile */}
+            <header className="flex items-center justify-between px-3 py-2 md:px-6 md:py-4 border-b bg-background/80 backdrop-blur-sm">
+                <div className="flex items-center gap-2 md:gap-4">
+                    <div className="flex items-center gap-1.5 md:gap-2">
+                        <div className="w-6 h-6 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center shadow-lg shadow-primary/25">
+                            <Zap className="w-3 h-3 md:w-5 md:h-5 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
+                            <h1 className="text-sm md:text-xl font-bold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
                                 ToDoManager
                             </h1>
-                            <p className="text-xs text-muted-foreground">あなたの第二の脳</p>
+                            <p className="text-[10px] md:text-xs text-muted-foreground hidden sm:block">あなたの第二の脳</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 md:gap-4">
                     <div className="text-right">
-                        <p className="text-2xl font-bold text-foreground">{currentTime}</p>
-                        <p className="text-xs text-muted-foreground">{currentDate}</p>
+                        <p className="text-base md:text-2xl font-bold text-foreground">{currentTime}</p>
+                        <p className="text-[10px] md:text-xs text-muted-foreground">{currentDate}</p>
                     </div>
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="rounded-full"
+                        className="rounded-full w-7 h-7 md:w-10 md:h-10"
                         onClick={() => setIsSettingsOpen(true)}
                     >
-                        <Settings className="w-5 h-5" />
+                        <Settings className="w-4 h-4 md:w-5 md:h-5" />
                     </Button>
                 </div>
             </header>
 
-            {/* Stats bar */}
-            <div className="flex items-center gap-4 px-6 py-3 border-b bg-muted/30">
-                <Badge variant="secondary" className="gap-1">
-                    <Calendar className="w-3 h-3" />
+            {/* Stats bar - compact on mobile */}
+            <div className="flex items-center gap-2 md:gap-4 px-3 py-1.5 md:px-6 md:py-3 border-b bg-muted/30 text-xs md:text-sm">
+                <Badge variant="secondary" className="gap-1 text-[10px] md:text-xs px-1.5 py-0.5 md:px-2 md:py-1">
+                    <Calendar className="w-2.5 h-2.5 md:w-3 md:h-3" />
                     {tasks.length} タスク
                 </Badge>
-                <Badge variant="outline" className="gap-1 border-yellow-500/30 text-yellow-600">
+                <Badge variant="outline" className="gap-1 border-yellow-500/30 text-yellow-600 text-[10px] md:text-xs px-1.5 py-0.5 md:px-2 md:py-1">
                     {pendingTasks} 未完了
                 </Badge>
-                <Badge variant="outline" className="gap-1 border-green-500/30 text-green-600">
+                <Badge variant="outline" className="gap-1 border-green-500/30 text-green-600 text-[10px] md:text-xs px-1.5 py-0.5 md:px-2 md:py-1">
                     {completedTasks} 完了
                 </Badge>
                 {lastUpdate && (
-                    <Badge variant="outline" className="gap-1 border-primary/30 text-primary ml-auto">
-                        <Zap className="w-3 h-3" />
+                    <Badge variant="outline" className="gap-1 border-primary/30 text-primary ml-auto text-[10px] md:text-xs px-1.5 py-0.5 md:px-2 md:py-1">
+                        <Zap className="w-2.5 h-2.5 md:w-3 md:h-3" />
                         更新: {lastUpdate}
                     </Badge>
                 )}
@@ -181,22 +193,22 @@ export function Dashboard() {
             <div className="flex lg:hidden border-b bg-background/80">
                 <button
                     onClick={() => setActiveTab("schedule")}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${activeTab === "schedule"
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium transition-colors ${activeTab === "schedule"
                         ? "text-primary border-b-2 border-primary bg-primary/5"
                         : "text-muted-foreground hover:text-foreground"
                         }`}
                 >
-                    <Calendar className="w-4 h-4" />
+                    <Calendar className="w-3 h-3" />
                     スケジュール
                 </button>
                 <button
                     onClick={() => setActiveTab("chat")}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${activeTab === "chat"
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium transition-colors ${activeTab === "chat"
                         ? "text-primary border-b-2 border-primary bg-primary/5"
                         : "text-muted-foreground hover:text-foreground"
                         }`}
                 >
-                    <MessageSquare className="w-4 h-4" />
+                    <MessageSquare className="w-3 h-3" />
                     AIチャット
                 </button>
             </div>
