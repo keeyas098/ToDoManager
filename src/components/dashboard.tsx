@@ -98,32 +98,45 @@ export function Dashboard() {
     const [activeTab, setActiveTab] = useState<"schedule" | "chat">("schedule");
     const [isHydrated, setIsHydrated] = useState(false);
 
-    // Touch handling for swipe gestures
-    const [touchStart, setTouchStart] = useState<number | null>(null);
-    const [touchEnd, setTouchEnd] = useState<number | null>(null);
+    // Touch handling for swipe gestures (horizontal only)
+    const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
+    const [touchEnd, setTouchEnd] = useState<{ x: number; y: number } | null>(null);
 
     // Minimum swipe distance for gesture
     const minSwipeDistance = 50;
 
     const onTouchStart = (e: React.TouchEvent) => {
         setTouchEnd(null);
-        setTouchStart(e.targetTouches[0].clientX);
+        setTouchStart({
+            x: e.targetTouches[0].clientX,
+            y: e.targetTouches[0].clientY
+        });
     };
 
     const onTouchMove = (e: React.TouchEvent) => {
-        setTouchEnd(e.targetTouches[0].clientX);
+        setTouchEnd({
+            x: e.targetTouches[0].clientX,
+            y: e.targetTouches[0].clientY
+        });
     };
 
     const onTouchEnd = () => {
         if (!touchStart || !touchEnd) return;
-        const distance = touchStart - touchEnd;
-        const isLeftSwipe = distance > minSwipeDistance;
-        const isRightSwipe = distance < -minSwipeDistance;
 
-        if (isLeftSwipe && activeTab === "schedule") {
-            setActiveTab("chat");
-        } else if (isRightSwipe && activeTab === "chat") {
-            setActiveTab("schedule");
+        const distanceX = touchStart.x - touchEnd.x;
+        const distanceY = touchStart.y - touchEnd.y;
+
+        // Only trigger tab switch if horizontal movement is greater than vertical
+        // This allows vertical scrolling to work normally
+        if (Math.abs(distanceX) > Math.abs(distanceY) && Math.abs(distanceX) > minSwipeDistance) {
+            const isLeftSwipe = distanceX > 0;
+            const isRightSwipe = distanceX < 0;
+
+            if (isLeftSwipe && activeTab === "schedule") {
+                setActiveTab("chat");
+            } else if (isRightSwipe && activeTab === "chat") {
+                setActiveTab("schedule");
+            }
         }
     };
 
