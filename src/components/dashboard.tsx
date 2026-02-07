@@ -96,10 +96,34 @@ export function Dashboard() {
     const [lastUpdate, setLastUpdate] = useState<string | null>(null);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<"schedule" | "chat">("schedule");
+    const [isHydrated, setIsHydrated] = useState(false);
 
     // Time state - initialized empty to avoid Hydration mismatch
     const [currentTime, setCurrentTime] = useState<string>("");
     const [currentDate, setCurrentDate] = useState<string>("");
+
+    // Load tasks from localStorage on mount
+    useEffect(() => {
+        const savedTasks = localStorage.getItem("todomanager-schedule");
+        if (savedTasks) {
+            try {
+                const parsed = JSON.parse(savedTasks);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    setTasks(parsed);
+                }
+            } catch (e) {
+                console.error("Failed to parse saved schedule:", e);
+            }
+        }
+        setIsHydrated(true);
+    }, []);
+
+    // Save tasks to localStorage whenever they change (after hydration)
+    useEffect(() => {
+        if (isHydrated) {
+            localStorage.setItem("todomanager-schedule", JSON.stringify(tasks));
+        }
+    }, [tasks, isHydrated]);
 
     // Update time on client side only
     useEffect(() => {

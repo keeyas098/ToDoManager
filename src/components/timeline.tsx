@@ -108,23 +108,23 @@ export function Timeline({ tasks, onTaskClick }: TimelineProps) {
                                     />
                                 </div>
 
-                                {/* Content - compact */}
+                                {/* Content - with word wrap for mobile */}
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-1.5">
-                                        <h3 className="font-medium text-foreground text-sm md:text-base truncate">
+                                    <div className="flex items-start gap-1.5">
+                                        <h3 className="font-medium text-foreground text-sm md:text-base break-words">
                                             {task.title}
                                         </h3>
                                         {task.priority && (
                                             <div
                                                 className={cn(
-                                                    "w-1.5 h-1.5 md:w-2 md:h-2 rounded-full flex-shrink-0",
+                                                    "w-1.5 h-1.5 md:w-2 md:h-2 rounded-full flex-shrink-0 mt-1.5",
                                                     priorityColors[task.priority]
                                                 )}
                                             />
                                         )}
                                     </div>
                                     {task.description && (
-                                        <p className="text-xs text-muted-foreground truncate">
+                                        <p className="text-xs text-muted-foreground break-words">
                                             {task.description}
                                         </p>
                                     )}
