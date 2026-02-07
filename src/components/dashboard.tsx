@@ -98,6 +98,35 @@ export function Dashboard() {
     const [activeTab, setActiveTab] = useState<"schedule" | "chat">("schedule");
     const [isHydrated, setIsHydrated] = useState(false);
 
+    // Touch handling for swipe gestures
+    const [touchStart, setTouchStart] = useState<number | null>(null);
+    const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+    // Minimum swipe distance for gesture
+    const minSwipeDistance = 50;
+
+    const onTouchStart = (e: React.TouchEvent) => {
+        setTouchEnd(null);
+        setTouchStart(e.targetTouches[0].clientX);
+    };
+
+    const onTouchMove = (e: React.TouchEvent) => {
+        setTouchEnd(e.targetTouches[0].clientX);
+    };
+
+    const onTouchEnd = () => {
+        if (!touchStart || !touchEnd) return;
+        const distance = touchStart - touchEnd;
+        const isLeftSwipe = distance > minSwipeDistance;
+        const isRightSwipe = distance < -minSwipeDistance;
+
+        if (isLeftSwipe && activeTab === "schedule") {
+            setActiveTab("chat");
+        } else if (isRightSwipe && activeTab === "chat") {
+            setActiveTab("schedule");
+        }
+    };
+
     // Time state - initialized empty to avoid Hydration mismatch
     const [currentTime, setCurrentTime] = useState<string>("");
     const [currentDate, setCurrentDate] = useState<string>("");
@@ -199,7 +228,7 @@ export function Dashboard() {
                         }`}
                 >
                     <Calendar className="w-3 h-3" />
-                    スケジュール
+                    📅 {new Date().toLocaleDateString("ja-JP", { month: "numeric", day: "numeric" })}
                 </button>
                 <button
                     onClick={() => setActiveTab("chat")}
@@ -213,13 +242,18 @@ export function Dashboard() {
                 </button>
             </div>
 
-            {/* Main content - Split view on desktop, tabs on mobile */}
-            <div className="flex-1 flex flex-col lg:flex-row min-h-0">
+            {/* Main content - Split view on desktop, tabs on mobile with swipe support */}
+            <div
+                className="flex-1 flex flex-col lg:flex-row min-h-0"
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onTouchEnd}
+            >
                 {/* Timeline section - hidden on mobile when chat tab is active */}
                 <div className={`flex-1 lg:w-1/2 lg:border-r min-h-0 ${activeTab === "chat" ? "hidden lg:flex lg:flex-col" : "flex flex-col"}`}>
                     <div className="hidden lg:flex items-center gap-2 px-4 py-3 border-b bg-background/50">
                         <Calendar className="w-4 h-4 text-primary" />
-                        <h2 className="font-semibold text-foreground">今日のスケジュール</h2>
+                        <h2 className="font-semibold text-foreground">📅 {new Date().toLocaleDateString("ja-JP", { month: "long", day: "numeric" })}のスケジュール</h2>
                     </div>
                     <div className="flex-1 min-h-0 overflow-auto">
                         <Timeline tasks={tasks} />

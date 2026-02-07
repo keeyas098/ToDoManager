@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
-import { Send, Bot, User, Loader2, Sparkles } from "lucide-react";
+import { Send, Bot, User, Loader2, Sparkles, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Task, ScheduleUpdate } from "@/lib/types";
 import { VoiceRecorder } from "./voice-recorder";
@@ -27,11 +27,21 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
     const [input, setInput] = useState("");
     const [isApiLoading, setIsApiLoading] = useState(false);
     const [toastError, setToastError] = useState<string | null>(null);
+    const [showScrollButton, setShowScrollButton] = useState(false);
 
     // Scroll to bottom helper
     const scrollToBottom = useCallback(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+    }, []);
+
+    // Track scroll position to show/hide scroll button
+    const handleScroll = useCallback(() => {
+        if (scrollRef.current) {
+            const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+            const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+            setShowScrollButton(!isNearBottom);
         }
     }, []);
 
@@ -49,6 +59,20 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }, 300);
     }, [scrollToBottom]);
+
+    // Format timestamp for display
+    const formatTimestamp = useCallback((timestamp: number) => {
+        const date = new Date(timestamp);
+        const now = new Date();
+        const isToday = date.toDateString() === now.toDateString();
+
+        if (isToday) {
+            return date.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
+        } else {
+            return date.toLocaleDateString("ja-JP", { month: "numeric", day: "numeric" }) +
+                " " + date.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
+        }
+    }, []);
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -239,75 +263,104 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
                 </div>
             </div>
 
-            {/* Messages area */}
-            <ScrollArea className="flex-1 p-2 md:p-4" ref={scrollRef}>
-                <div className="space-y-3 md:space-y-4">
-                    {messages.length === 0 && (
-                        <div className="flex flex-col items-center justify-center py-4 md:py-8 text-center">
-                            <div className="w-10 h-10 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center mb-3 md:mb-4">
-                                <Sparkles className="w-5 h-5 md:w-8 md:h-8 text-primary" />
-                            </div>
-                            <h4 className="font-medium text-foreground mb-1 md:mb-2 text-sm md:text-base">準備完了！</h4>
-                            <p className="text-xs md:text-sm text-muted-foreground max-w-[240px] md:max-w-[280px]">
-                                状況を教えてください。スケジュールを調整します。
-                                例：「息子が熱を出した」「今日は在宅勤務」
-                            </p>
-                        </div>
-                    )}
-
-                    {messages.map((message) => (
-                        <div
-                            key={message.id}
-                            className={cn(
-                                "flex gap-1.5 md:gap-3",
-                                message.role === "user" ? "justify-end" : "justify-start"
-                            )}
-                        >
-                            {message.role === "assistant" && (
-                                <Avatar className="w-6 h-6 md:w-8 md:h-8 bg-gradient-to-br from-primary to-green-600 flex items-center justify-center flex-shrink-0">
-                                    <Bot className="w-3 h-3 md:w-4 md:h-4 text-white" />
-                                </Avatar>
-                            )}
-
-                            {message.role === "user" ? (
-                                <CollapsibleMessage
-                                    content={message.content}
-                                    isUser={true}
-                                    onEdit={(newContent) => handleEditAndRegenerate(message.id, newContent)}
-                                    className="max-w-[80%] md:max-w-[85%] bg-primary text-primary-foreground"
-                                />
-                            ) : (
-                                <CollapsibleMessage
-                                    content={formatMessageContent(message.content)}
-                                    isUser={false}
-                                    className="max-w-[80%] md:max-w-[85%] bg-muted"
-                                />
-                            )}
-
-                            {message.role === "user" && (
-                                <Avatar className="w-6 h-6 md:w-8 md:h-8 bg-muted flex items-center justify-center flex-shrink-0">
-                                    <User className="w-3 h-3 md:w-4 md:h-4 text-muted-foreground" />
-                                </Avatar>
-                            )}
-                        </div>
-                    ))}
-
-                    {isApiLoading && (
-                        <div className="flex gap-3 justify-start">
-                            <Avatar className="w-8 h-8 bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center">
-                                <Bot className="w-4 h-4 text-white" />
-                            </Avatar>
-                            <Card className="bg-muted p-3">
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    <span>分析中...</span>
+            {/* Messages area with scroll button */}
+            <div className="relative flex-1 min-h-0">
+                <ScrollArea
+                    className="h-full p-2 md:p-4"
+                    ref={scrollRef}
+                    onScrollCapture={handleScroll}
+                >
+                    <div className="space-y-3 md:space-y-4">
+                        {messages.length === 0 && (
+                            <div className="flex flex-col items-center justify-center py-4 md:py-8 text-center">
+                                <div className="w-10 h-10 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center mb-3 md:mb-4">
+                                    <Sparkles className="w-5 h-5 md:w-8 md:h-8 text-primary" />
                                 </div>
-                            </Card>
-                        </div>
-                    )}
+                                <h4 className="font-medium text-foreground mb-1 md:mb-2 text-sm md:text-base">準備完了！</h4>
+                                <p className="text-xs md:text-sm text-muted-foreground max-w-[240px] md:max-w-[280px]">
+                                    状況を教えてください。スケジュールを調整します。
+                                    例：「息子が熱を出した」「今日は在宅勤務」
+                                </p>
+                            </div>
+                        )}
 
-                </div>
-            </ScrollArea>
+                        {messages.map((message) => (
+                            <div
+                                key={message.id}
+                                className={cn(
+                                    "flex flex-col gap-0.5",
+                                    message.role === "user" ? "items-end" : "items-start"
+                                )}
+                            >
+                                <div className={cn(
+                                    "flex gap-1.5 md:gap-3",
+                                    message.role === "user" ? "justify-end" : "justify-start"
+                                )}>
+                                    {message.role === "assistant" && (
+                                        <Avatar className="w-6 h-6 md:w-8 md:h-8 bg-gradient-to-br from-primary to-green-600 flex items-center justify-center flex-shrink-0">
+                                            <Bot className="w-3 h-3 md:w-4 md:h-4 text-white" />
+                                        </Avatar>
+                                    )}
+
+                                    {message.role === "user" ? (
+                                        <CollapsibleMessage
+                                            content={message.content}
+                                            isUser={true}
+                                            onEdit={(newContent) => handleEditAndRegenerate(message.id, newContent)}
+                                            className="max-w-[80%] md:max-w-[85%] bg-primary text-primary-foreground"
+                                        />
+                                    ) : (
+                                        <CollapsibleMessage
+                                            content={formatMessageContent(message.content)}
+                                            isUser={false}
+                                            className="max-w-[80%] md:max-w-[85%] bg-muted"
+                                        />
+                                    )}
+
+                                    {message.role === "user" && (
+                                        <Avatar className="w-6 h-6 md:w-8 md:h-8 bg-muted flex items-center justify-center flex-shrink-0">
+                                            <User className="w-3 h-3 md:w-4 md:h-4 text-muted-foreground" />
+                                        </Avatar>
+                                    )}
+                                </div>
+                                {/* Timestamp */}
+                                <span className={cn(
+                                    "text-[10px] text-muted-foreground/70 px-1",
+                                    message.role === "user" ? "mr-8 md:mr-10" : "ml-8 md:ml-10"
+                                )}>
+                                    {formatTimestamp(message.timestamp)}
+                                </span>
+                            </div>
+                        ))}
+
+                        {isApiLoading && (
+                            <div className="flex gap-3 justify-start">
+                                <Avatar className="w-8 h-8 bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center">
+                                    <Bot className="w-4 h-4 text-white" />
+                                </Avatar>
+                                <Card className="bg-muted p-3">
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <span>分析中...</span>
+                                    </div>
+                                </Card>
+                            </div>
+                        )}
+
+                    </div>
+                </ScrollArea>
+
+                {/* Scroll to bottom button */}
+                {showScrollButton && (
+                    <button
+                        onClick={scrollToBottom}
+                        className="absolute bottom-4 right-4 w-10 h-10 bg-primary/90 hover:bg-primary text-primary-foreground rounded-full shadow-lg flex items-center justify-center transition-all"
+                        aria-label="最新メッセージへ"
+                    >
+                        <ChevronDown className="w-5 h-5" />
+                    </button>
+                )}
+            </div>
 
             {/* Input area - compact on mobile */}
             <form onSubmit={handleSubmit} className="p-2 md:p-4 border-t bg-background/80 backdrop-blur-sm">
