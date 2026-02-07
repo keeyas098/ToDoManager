@@ -2,7 +2,6 @@
 
 import { useRef, useEffect, useState, FormEvent, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Send, Bot, User, Loader2, Sparkles, ChevronDown } from "lucide-react";
@@ -265,10 +264,10 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
 
             {/* Messages area with scroll button */}
             <div className="relative flex-1 min-h-0">
-                <ScrollArea
-                    className="h-full p-2 md:p-4"
+                <div
                     ref={scrollRef}
-                    onScrollCapture={handleScroll}
+                    onScroll={handleScroll}
+                    className="h-full overflow-y-auto p-2 md:p-4"
                 >
                     <div className="space-y-3 md:space-y-4">
                         {messages.length === 0 && (
@@ -348,7 +347,7 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
                         )}
 
                     </div>
-                </ScrollArea>
+                </div>
 
                 {/* Scroll to bottom button */}
                 {showScrollButton && (
