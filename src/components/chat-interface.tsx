@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState, FormEvent } from "react";
+import { useRef, useEffect, useState, FormEvent, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar } from "@/components/ui/avatar";
@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { Task, ScheduleUpdate } from "@/lib/types";
 import { VoiceRecorder } from "./voice-recorder";
 import { CollapsibleMessage } from "./collapsible-message";
+import { Toast } from "./toast";
 
 import { useChatHistory, useCustomInstructions } from "@/hooks/use-local-storage";
 
@@ -20,18 +21,34 @@ interface ChatInterfaceProps {
 
 export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfaceProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
     const { messages, addMessage, updateMessage, editAndRegenerateMessage, getConversationSummary, isLoading: isHistoryLoading } = useChatHistory();
     const { value: customInstructions } = useCustomInstructions();
     const [input, setInput] = useState("");
     const [isApiLoading, setIsApiLoading] = useState(false);
-    const [error, setError] = useState<Error | null>(null);
+    const [toastError, setToastError] = useState<string | null>(null);
 
-    // Auto-scroll to bottom when new messages arrive
-    useEffect(() => {
+    // Scroll to bottom helper
+    const scrollToBottom = useCallback(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-    }, [messages]);
+    }, []);
+
+    // Auto-scroll to bottom when new messages arrive
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages, scrollToBottom]);
+
+    // Handle input focus - scroll to bottom for keyboard
+    const handleInputFocus = useCallback(() => {
+        // Small delay to wait for keyboard to appear
+        setTimeout(() => {
+            scrollToBottom();
+            // Also scroll the window to ensure input is visible
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }, 300);
+    }, [scrollToBottom]);
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -45,7 +62,7 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
 
         setInput("");
         setIsApiLoading(true);
-        setError(null);
+        setToastError(null);
 
         try {
             // Prepare messages context (last 10 messages + new one)
@@ -98,7 +115,8 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
                 console.log("スケジュール更新ではありません");
             }
         } catch (err) {
-            setError(err instanceof Error ? err : new Error("不明なエラー"));
+            const errorMsg = err instanceof Error ? err.message : "不明なエラー";
+            setToastError(errorMsg);
         } finally {
             setIsApiLoading(false);
         }
@@ -134,7 +152,7 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
         editAndRegenerateMessage(messageId, newContent);
 
         setIsApiLoading(true);
-        setError(null);
+        setToastError(null);
 
         try {
             // Small delay to allow state to update
@@ -189,7 +207,8 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
                 console.log("スケジュール更新ではありません");
             }
         } catch (err) {
-            setError(err instanceof Error ? err : new Error("不明なエラー"));
+            const errorMsg = err instanceof Error ? err.message : "不明なエラー";
+            setToastError(errorMsg);
         } finally {
             setIsApiLoading(false);
         }
@@ -197,6 +216,15 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
 
     return (
         <div className="flex flex-col h-full bg-background/50 backdrop-blur-sm">
+            {/* Toast notification for errors */}
+            {toastError && (
+                <Toast
+                    message={toastError}
+                    type="error"
+                    onClose={() => setToastError(null)}
+                />
+            )}
+
             {/* Chat header - compact on mobile */}
             <div className="flex items-center gap-2 md:gap-3 p-2 md:p-4 border-b bg-gradient-to-r from-primary/10 to-purple-500/10">
                 <div className="relative">
@@ -278,13 +306,6 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
                         </div>
                     )}
 
-                    {error && (
-                        <Card className="bg-destructive/10 border-destructive/20 p-3">
-                            <p className="text-sm text-destructive">
-                                エラー: {error.message}。API設定を確認してください。
-                            </p>
-                        </Card>
-                    )}
                 </div>
             </ScrollArea>
 
@@ -296,13 +317,15 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
                         disabled={isApiLoading}
                     />
                     <textarea
+                        ref={textareaRef}
                         value={input}
                         onChange={(e) => {
                             setInput(e.target.value);
                             // Auto-resize textarea
                             e.target.style.height = 'auto';
-                            e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                            e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
                         }}
+                        onFocus={handleInputFocus}
                         onKeyDown={(e) => {
                             // Submit on Enter without Shift
                             if (e.key === 'Enter' && !e.shiftKey) {

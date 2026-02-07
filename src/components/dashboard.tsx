@@ -130,7 +130,7 @@ export function Dashboard() {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-gradient-to-br from-background via-background to-primary/5">
+        <div className="flex flex-col h-dvh bg-gradient-to-br from-background via-background to-primary/5">
             <SettingsDialog isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
 
             {/* Header - compact on mobile */}
