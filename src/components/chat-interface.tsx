@@ -379,8 +379,10 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
                         }}
                         onFocus={handleInputFocus}
                         onKeyDown={(e) => {
-                            // Submit on Enter without Shift
-                            if (e.key === 'Enter' && !e.shiftKey) {
+                            // Desktop only: Submit on Enter without Shift
+                            // Mobile: Enter adds newline, users tap send button
+                            const isMobile = window.innerWidth < 768;
+                            if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
                                 e.preventDefault();
                                 if (input.trim() && !isApiLoading) {
                                     handleSubmit(e as unknown as FormEvent<HTMLFormElement>);

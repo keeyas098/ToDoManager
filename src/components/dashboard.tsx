@@ -98,48 +98,6 @@ export function Dashboard() {
     const [activeTab, setActiveTab] = useState<"schedule" | "chat">("schedule");
     const [isHydrated, setIsHydrated] = useState(false);
 
-    // Touch handling for swipe gestures (horizontal only)
-    const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
-    const [touchEnd, setTouchEnd] = useState<{ x: number; y: number } | null>(null);
-
-    // Minimum swipe distance for gesture
-    const minSwipeDistance = 50;
-
-    const onTouchStart = (e: React.TouchEvent) => {
-        setTouchEnd(null);
-        setTouchStart({
-            x: e.targetTouches[0].clientX,
-            y: e.targetTouches[0].clientY
-        });
-    };
-
-    const onTouchMove = (e: React.TouchEvent) => {
-        setTouchEnd({
-            x: e.targetTouches[0].clientX,
-            y: e.targetTouches[0].clientY
-        });
-    };
-
-    const onTouchEnd = () => {
-        if (!touchStart || !touchEnd) return;
-
-        const distanceX = touchStart.x - touchEnd.x;
-        const distanceY = touchStart.y - touchEnd.y;
-
-        // Only trigger tab switch if horizontal movement is greater than vertical
-        // This allows vertical scrolling to work normally
-        if (Math.abs(distanceX) > Math.abs(distanceY) && Math.abs(distanceX) > minSwipeDistance) {
-            const isLeftSwipe = distanceX > 0;
-            const isRightSwipe = distanceX < 0;
-
-            if (isLeftSwipe && activeTab === "schedule") {
-                setActiveTab("chat");
-            } else if (isRightSwipe && activeTab === "chat") {
-                setActiveTab("schedule");
-            }
-        }
-    };
-
     // Time state - initialized empty to avoid Hydration mismatch
     const [currentTime, setCurrentTime] = useState<string>("");
     const [currentDate, setCurrentDate] = useState<string>("");
@@ -255,13 +213,8 @@ export function Dashboard() {
                 </button>
             </div>
 
-            {/* Main content - Split view on desktop, tabs on mobile with swipe support */}
-            <div
-                className="flex-1 flex flex-col lg:flex-row min-h-0"
-                onTouchStart={onTouchStart}
-                onTouchMove={onTouchMove}
-                onTouchEnd={onTouchEnd}
-            >
+            {/* Main content - Split view on desktop, tabs on mobile */}
+            <div className="flex-1 flex flex-col lg:flex-row min-h-0">
                 {/* Timeline section - hidden on mobile when chat tab is active */}
                 <div className={`flex-1 lg:w-1/2 lg:border-r min-h-0 ${activeTab === "chat" ? "hidden lg:flex lg:flex-col" : "flex flex-col"}`}>
                     <div className="hidden lg:flex items-center gap-2 px-4 py-3 border-b bg-background/50">
