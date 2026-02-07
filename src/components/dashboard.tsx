@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Timeline } from "./timeline";
 import { ChatInterface } from "./chat-interface";
 import { Task, ScheduleUpdate } from "@/lib/types";
-import { Calendar, MessageSquare, Zap, Settings } from "lucide-react";
+import { Calendar, MessageSquare, Zap, Settings, Send } from "lucide-react";
 import { SettingsDialog } from "./settings-dialog";
 import { Button } from "@/components/ui/button";
 
@@ -98,6 +98,28 @@ export function Dashboard() {
     const [activeTab, setActiveTab] = useState<"schedule" | "chat">("schedule");
     const [isHydrated, setIsHydrated] = useState(false);
 
+    // Swipe handling for tab bar
+    const [touchStart, setTouchStart] = useState<number | null>(null);
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        setTouchStart(e.targetTouches[0].clientX);
+    };
+
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        if (!touchStart) return;
+        const touchEnd = e.changedTouches[0].clientX;
+        const diff = touchStart - touchEnd;
+
+        if (Math.abs(diff) > 50) {
+            if (diff > 0 && activeTab === "schedule") {
+                setActiveTab("chat");
+            } else if (diff < 0 && activeTab === "chat") {
+                setActiveTab("schedule");
+            }
+        }
+        setTouchStart(null);
+    };
+
     // Time state - initialized empty to avoid Hydration mismatch
     const [currentTime, setCurrentTime] = useState<string>("");
     const [currentDate, setCurrentDate] = useState<string>("");
@@ -189,8 +211,12 @@ export function Dashboard() {
                 </div>
             </header>
 
-            {/* Mobile Tab Navigation - only visible on small screens */}
-            <div className="flex lg:hidden border-b bg-background/80">
+            {/* Mobile Tab Navigation - only visible on small screens, supports swipe */}
+            <div
+                className="flex lg:hidden border-b bg-background/80"
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+            >
                 <button
                     onClick={() => setActiveTab("schedule")}
                     className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium transition-colors ${activeTab === "schedule"
@@ -223,6 +249,18 @@ export function Dashboard() {
                     </div>
                     <div className="flex-1 min-h-0 overflow-auto">
                         <Timeline tasks={tasks} />
+                    </div>
+
+                    {/* Quick chat input on mobile - switches to chat tab */}
+                    <div className="lg:hidden border-t bg-background/80 p-2">
+                        <button
+                            onClick={() => setActiveTab("chat")}
+                            className="w-full flex items-center gap-2 px-3 py-2 bg-muted rounded-lg text-muted-foreground text-sm"
+                        >
+                            <MessageSquare className="w-4 h-4" />
+                            <span>AIに相談する...</span>
+                            <Send className="w-4 h-4 ml-auto text-primary" />
+                        </button>
                     </div>
                 </div>
 
