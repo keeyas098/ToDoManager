@@ -49,6 +49,14 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
         scrollToBottom();
     }, [messages, scrollToBottom]);
 
+    // Scroll to bottom on initial mount (with delay for DOM to render)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            scrollToBottom();
+        }, 100);
+        return () => clearTimeout(timer);
+    }, [scrollToBottom]);
+
     // Handle input focus - scroll to bottom for keyboard
     const handleInputFocus = useCallback(() => {
         // Small delay to wait for keyboard to appear
