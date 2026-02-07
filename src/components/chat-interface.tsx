@@ -263,11 +263,12 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
             </div>
 
             {/* Messages area with scroll button */}
-            <div className="relative flex-1 min-h-0">
+            <div className="relative flex-1 min-h-0 overflow-hidden">
                 <div
                     ref={scrollRef}
                     onScroll={handleScroll}
-                    className="h-full overflow-y-auto p-2 md:p-4"
+                    className="absolute inset-0 overflow-y-scroll overscroll-contain p-2 md:p-4"
+                    style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
                 >
                     <div className="space-y-3 md:space-y-4">
                         {messages.length === 0 && (
