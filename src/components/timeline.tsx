@@ -43,17 +43,15 @@ const isTaskPast = (taskTime: string) => {
 };
 
 export function Timeline({ tasks, onTaskClick }: TimelineProps) {
-    // Filter out past and completed tasks, then sort by time
+    // Show all tasks (including past ones), only hide completed/cancelled
+    // Sort by time
     const activeTasks = tasks
         .filter(task => {
             // Hide completed or cancelled tasks
             if (task.status === "completed" || task.status === "cancelled") {
                 return false;
             }
-            // Hide tasks whose time has passed
-            if (isTaskPast(task.time)) {
-                return false;
-            }
+            // Keep all tasks including past ones (user requested)
             return true;
         })
         .sort((a, b) => a.time.localeCompare(b.time));

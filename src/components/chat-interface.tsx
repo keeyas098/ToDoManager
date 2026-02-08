@@ -228,14 +228,27 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
 
             // Try to parse the response as JSON schedule update
             try {
-                const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-                const jsonStr = jsonMatch ? jsonMatch[1].trim() : text.trim();
+                let jsonStr = text.trim();
+
+                // Try to extract JSON from markdown code block first
+                const jsonMatch = text.match(/```(?:json)?[\s\n]*(\{[\s\S]*?\})[\s\n]*```/);
+                if (jsonMatch) {
+                    jsonStr = jsonMatch[1].trim();
+                } else {
+                    // Try to find raw JSON object in the response
+                    const rawJsonMatch = text.match(/\{[\s\S]*"tasks"[\s\S]*\}/);
+                    if (rawJsonMatch) {
+                        jsonStr = rawJsonMatch[0];
+                    }
+                }
+
                 const scheduleUpdate = JSON.parse(jsonStr) as ScheduleUpdate;
-                if (scheduleUpdate.tasks && Array.isArray(scheduleUpdate.tasks)) {
+                if (scheduleUpdate.tasks && Array.isArray(scheduleUpdate.tasks) && scheduleUpdate.tasks.length > 0) {
+                    console.log("スケジュール更新を検出:", scheduleUpdate.tasks.length, "件のタスク");
                     onScheduleUpdate(scheduleUpdate);
                 }
             } catch {
-                console.log("スケジュール更新ではありません");
+                console.log("スケジュール更新ではありません（JSONパース失敗）");
             }
         } catch (err) {
             const errorMsg = err instanceof Error ? err.message : "不明なエラー";
