@@ -102,14 +102,21 @@ export function Dashboard() {
     const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
 
     const handleTouchStart = (e: React.TouchEvent) => {
-        setTouchStart({
-            x: e.targetTouches[0].clientX,
-            y: e.targetTouches[0].clientY
-        });
+        if (e.targetTouches && e.targetTouches[0]) {
+            setTouchStart({
+                x: e.targetTouches[0].clientX,
+                y: e.targetTouches[0].clientY
+            });
+        }
     };
 
     const handleTouchEnd = (e: React.TouchEvent) => {
         if (!touchStart) return;
+        if (!e.changedTouches || !e.changedTouches[0]) {
+            setTouchStart(null);
+            return;
+        }
+
         const touchEnd = {
             x: e.changedTouches[0].clientX,
             y: e.changedTouches[0].clientY
