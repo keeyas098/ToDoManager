@@ -69,12 +69,12 @@ export function CollapsibleMessage({ content, isUser, onEdit, className }: Colla
 
     return (
         <div className={cn("rounded-lg px-2.5 py-1.5 md:px-3 md:py-2 relative group inline-block", className)}>
-            {/* Edit button for user messages */}
+            {/* Edit button for user messages - always visible on mobile, hover on desktop */}
             {isUser && onEdit && (
                 <Button
                     size="icon"
                     variant="ghost"
-                    className="absolute -top-1 -right-1 w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 rounded-full"
+                    className="absolute -top-1 -right-1 w-5 h-5 opacity-70 md:opacity-0 md:group-hover:opacity-100 transition-opacity bg-background/80 rounded-full"
                     onClick={() => setIsEditing(true)}
                 >
                     <Edit2 className="w-2.5 h-2.5" />

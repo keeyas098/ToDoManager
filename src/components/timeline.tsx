@@ -9,12 +9,15 @@ import {
     Circle,
     AlertCircle,
     XCircle,
+    Square,
+    CheckSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TimelineProps {
     tasks: Task[];
     onTaskClick?: (task: Task) => void;
+    onTaskToggle?: (taskId: string, completed: boolean) => void;
 }
 
 const priorityColors = {
@@ -42,7 +45,7 @@ const isTaskPast = (taskTime: string) => {
     return taskTime < currentTime;
 };
 
-export function Timeline({ tasks, onTaskClick }: TimelineProps) {
+export function Timeline({ tasks, onTaskClick, onTaskToggle }: TimelineProps) {
     // Show all tasks (including past ones), only hide completed/cancelled
     // Sort by time
     const activeTasks = tasks
@@ -95,16 +98,19 @@ export function Timeline({ tasks, onTaskClick }: TimelineProps) {
                                     )}
                                 </div>
 
-                                {/* Status indicator - smaller */}
-                                <div className="flex items-center justify-center w-5 h-5 md:w-6 md:h-6 rounded-full bg-muted flex-shrink-0">
-                                    <StatusIcon
-                                        className={cn(
-                                            "w-3 h-3 md:w-3.5 md:h-3.5",
-                                            task.status === "in-progress" && "text-yellow-500",
-                                            task.status === "pending" && "text-muted-foreground"
-                                        )}
-                                    />
-                                </div>
+                                {/* Checkbox - tap to mark complete */}
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (onTaskToggle) {
+                                            onTaskToggle(task.id, true);
+                                        }
+                                    }}
+                                    className="flex items-center justify-center w-6 h-6 md:w-7 md:h-7 rounded-md hover:bg-muted/80 transition-colors flex-shrink-0"
+                                    aria-label="タスク完了"
+                                >
+                                    <Square className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground hover:text-primary" />
+                                </button>
 
                                 {/* Content - with word wrap for mobile */}
                                 <div className="flex-1 min-w-0">

@@ -190,6 +190,18 @@ export function Dashboard() {
         }
     };
 
+    // Handle task completion toggle
+    const handleTaskToggle = (taskId: string, completed: boolean) => {
+        setTasks(prevTasks =>
+            prevTasks.map(task =>
+                task.id === taskId
+                    ? { ...task, status: completed ? "completed" : "pending" }
+                    : task
+            )
+        );
+        setLastUpdate(new Date().toLocaleTimeString("ja-JP"));
+    };
+
     return (
         <div className="flex flex-col h-dvh bg-gradient-to-br from-background via-background to-primary/5">
             <SettingsDialog isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
@@ -267,7 +279,7 @@ export function Dashboard() {
                         <h2 className="font-semibold text-foreground">📅 {new Date().toLocaleDateString("ja-JP", { month: "long", day: "numeric" })}のスケジュール</h2>
                     </div>
                     <div className="flex-1 min-h-0 overflow-auto">
-                        <Timeline tasks={tasks} />
+                        <Timeline tasks={tasks} onTaskToggle={handleTaskToggle} />
                     </div>
 
                     {/* Quick chat input on mobile - real input that switches to chat tab */}
