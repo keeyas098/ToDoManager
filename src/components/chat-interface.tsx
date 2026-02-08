@@ -203,14 +203,20 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
 
             const conversationSummary = getConversationSummary();
 
+            // Filter out past tasks to prevent AI from scheduling past times
+            const now = new Date();
+            const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            const futureSchedule = currentSchedule.filter(task => task.time >= currentTimeStr);
+
             const response = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     messages: historyContext,
-                    currentSchedule,
+                    currentSchedule: futureSchedule,
                     customInstructions,
                     conversationSummary,
+                    currentTime: currentTimeStr, // Send current time explicitly
                 }),
             });
 

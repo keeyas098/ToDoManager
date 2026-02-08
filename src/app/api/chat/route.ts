@@ -88,10 +88,15 @@ export const maxDuration = 30;
 
 export async function POST(req: Request) {
     try {
-        const { messages, currentSchedule, customInstructions, conversationSummary } = await req.json();
+        const { messages, currentSchedule, customInstructions, conversationSummary, currentTime } = await req.json();
 
         // Generate system prompt with current time (fresh on each request)
         let enhancedPrompt = getSystemPrompt();
+
+        // Add extra emphasis on current time from client
+        if (currentTime) {
+            enhancedPrompt += `\n\n⚠️ 絶対重要 ⚠️: ユーザーの現在時刻は ${currentTime} です。\nタスクの時刻は必ず ${currentTime} より後（未来）の時刻のみを設定してください。\n例：現在 01:00 なら 01:15, 01:30, 02:00 など。22:00や23:00など過去の時刻は絶対に使用禁止！`;
+        }
 
         if (customInstructions) {
             enhancedPrompt += `\n\n# ユーザー定義のコンテキスト\n以下の情報を優先して参照してください:\n${customInstructions}`;
@@ -102,7 +107,9 @@ export async function POST(req: Request) {
         }
 
         if (currentSchedule && currentSchedule.length > 0) {
-            enhancedPrompt += `\n\n現在のスケジュール:\n${JSON.stringify(currentSchedule, null, 2)}`;
+            enhancedPrompt += `\n\n現在のスケジュール（未来のタスクのみ）:\n${JSON.stringify(currentSchedule, null, 2)}`;
+        } else {
+            enhancedPrompt += `\n\n現在のスケジュール: なし（新規でスケジュールを作成してください）`;
         }
 
 
