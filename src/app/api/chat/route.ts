@@ -26,7 +26,13 @@ const defaultUserContext = {
     ],
 };
 
-const SYSTEM_PROMPT = `あなたは「ToDoManager AIアシスタント」、ユーザーの「第二の脳」として機能するスケジュール管理アシスタントです。
+// Function to generate system prompt with current time (called per request)
+const getSystemPrompt = () => {
+    const now = new Date();
+    const currentDateTime = now.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
+    const currentTime = now.toLocaleTimeString("ja-JP", { timeZone: "Asia/Tokyo", hour: "2-digit", minute: "2-digit", hour12: false });
+
+    return `あなたは「ToDoManager AIアシスタント」、ユーザーの「第二の脳」として機能するスケジュール管理アシスタントです。
 
 忙しい親が日々のスケジュールを動的に管理するのを助けます。状況や文脈の変化に応じてスケジュールをインテリジェントに更新します。
 
@@ -35,7 +41,7 @@ ${JSON.stringify(defaultUserContext, null, 2)}
 
 ※「ユーザー定義のコンテキスト」が提供された場合は、そちらを優先してください。
 
-現在の日時: ${new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}
+【重要】現在の日時: ${currentDateTime}（現在時刻: ${currentTime}）
 
 あなたの責任:
 1. ユーザーが状況を報告した場合（例：「息子が熱を出した」「雨が降っている」「今日は在宅勤務」）、スケジュールへの影響を分析する
@@ -64,6 +70,8 @@ ${JSON.stringify(defaultUserContext, null, 2)}
 }
 
 ガイドライン:
+- 【超重要】スケジュールの時刻は必ず現在時刻（${currentTime}）より後の未来の時刻にする。過去の時刻は絶対に設定しない！
+- 深夜（0:00〜5:00）の場合は、今日中のタスクか翌日のタスクかを明確にする
 - メッセージは共感的でサポート的に
 - 家族、特に子供の健康を最優先する
 - 計画を変更する必要がある場合は実用的な代替案を提案する
@@ -73,6 +81,7 @@ ${JSON.stringify(defaultUserContext, null, 2)}
 - 日本語で応答してください
 
 ユーザーが一般的な質問をしたり、スケジュールの変更なしにアドバイスが必要な場合でも、tasksを空の配列にしてメッセージをmessageフィールドに入れたJSON形式で応答してください。`;
+};
 
 // Allow responses up to 30 seconds
 export const maxDuration = 30;
@@ -81,8 +90,8 @@ export async function POST(req: Request) {
     try {
         const { messages, currentSchedule, customInstructions, conversationSummary } = await req.json();
 
-        // Enhance the system prompt with current schedule if available
-        let enhancedPrompt = SYSTEM_PROMPT;
+        // Generate system prompt with current time (fresh on each request)
+        let enhancedPrompt = getSystemPrompt();
 
         if (customInstructions) {
             enhancedPrompt += `\n\n# ユーザー定義のコンテキスト\n以下の情報を優先して参照してください:\n${customInstructions}`;

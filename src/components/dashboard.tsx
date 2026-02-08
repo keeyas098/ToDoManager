@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Timeline } from "./timeline";
 import { ChatInterface } from "./chat-interface";
 import { Task, ScheduleUpdate } from "@/lib/types";
-import { Calendar, MessageSquare, Zap, Settings, Send } from "lucide-react";
+import { Calendar, MessageSquare, Zap, Settings } from "lucide-react";
 import { SettingsDialog } from "./settings-dialog";
 import { Button } from "@/components/ui/button";
 
@@ -280,24 +280,6 @@ export function Dashboard() {
                     </div>
                     <div className="flex-1 min-h-0 overflow-auto">
                         <Timeline tasks={tasks} onTaskToggle={handleTaskToggle} />
-                    </div>
-
-                    {/* Quick chat input on mobile - real input that switches to chat tab */}
-                    <div className="lg:hidden border-t bg-background/80 p-2">
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="text"
-                                placeholder="AIに相談する..."
-                                className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                                onFocus={() => setActiveTab("chat")}
-                            />
-                            <button
-                                onClick={() => setActiveTab("chat")}
-                                className="p-2 bg-primary text-primary-foreground rounded-lg"
-                            >
-                                <Send className="w-4 h-4" />
-                            </button>
-                        </div>
                     </div>
                 </div>
 
