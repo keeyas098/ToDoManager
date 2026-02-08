@@ -98,22 +98,30 @@ export function Dashboard() {
     const [activeTab, setActiveTab] = useState<"schedule" | "chat">("schedule");
     const [isHydrated, setIsHydrated] = useState(false);
 
-    // Swipe handling for tab bar
-    const [touchStart, setTouchStart] = useState<number | null>(null);
+    // Swipe handling for tab switching (horizontal swipes only)
+    const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
 
     const handleTouchStart = (e: React.TouchEvent) => {
-        setTouchStart(e.targetTouches[0].clientX);
+        setTouchStart({
+            x: e.targetTouches[0].clientX,
+            y: e.targetTouches[0].clientY
+        });
     };
 
     const handleTouchEnd = (e: React.TouchEvent) => {
         if (!touchStart) return;
-        const touchEnd = e.changedTouches[0].clientX;
-        const diff = touchStart - touchEnd;
+        const touchEnd = {
+            x: e.changedTouches[0].clientX,
+            y: e.changedTouches[0].clientY
+        };
+        const diffX = touchStart.x - touchEnd.x;
+        const diffY = touchStart.y - touchEnd.y;
 
-        if (Math.abs(diff) > 50) {
-            if (diff > 0 && activeTab === "schedule") {
+        // Only activate on horizontal swipes (horizontal > vertical movement)
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+            if (diffX > 0 && activeTab === "schedule") {
                 setActiveTab("chat");
-            } else if (diff < 0 && activeTab === "chat") {
+            } else if (diffX < 0 && activeTab === "chat") {
                 setActiveTab("schedule");
             }
         }
@@ -239,8 +247,12 @@ export function Dashboard() {
                 </button>
             </div>
 
-            {/* Main content - Split view on desktop, tabs on mobile */}
-            <div className="flex-1 flex flex-col lg:flex-row min-h-0">
+            {/* Main content - Split view on desktop, tabs on mobile with swipe */}
+            <div
+                className="flex-1 flex flex-col lg:flex-row min-h-0"
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+            >
                 {/* Timeline section - hidden on mobile when chat tab is active */}
                 <div className={`flex-1 lg:w-1/2 lg:border-r min-h-0 ${activeTab === "chat" ? "hidden lg:flex lg:flex-col" : "flex flex-col"}`}>
                     <div className="hidden lg:flex items-center gap-2 px-4 py-3 border-b bg-background/50">
@@ -251,16 +263,22 @@ export function Dashboard() {
                         <Timeline tasks={tasks} />
                     </div>
 
-                    {/* Quick chat input on mobile - switches to chat tab */}
+                    {/* Quick chat input on mobile - real input that switches to chat tab */}
                     <div className="lg:hidden border-t bg-background/80 p-2">
-                        <button
-                            onClick={() => setActiveTab("chat")}
-                            className="w-full flex items-center gap-2 px-3 py-2 bg-muted rounded-lg text-muted-foreground text-sm"
-                        >
-                            <MessageSquare className="w-4 h-4" />
-                            <span>AIに相談する...</span>
-                            <Send className="w-4 h-4 ml-auto text-primary" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="text"
+                                placeholder="AIに相談する..."
+                                className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                onFocus={() => setActiveTab("chat")}
+                            />
+                            <button
+                                onClick={() => setActiveTab("chat")}
+                                className="p-2 bg-primary text-primary-foreground rounded-lg"
+                            >
+                                <Send className="w-4 h-4" />
+                            </button>
+                        </div>
                     </div>
                 </div>
 

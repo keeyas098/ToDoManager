@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -48,12 +48,12 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps) {
     const [isSaved, setIsSaved] = useState(false);
     const [showResetConfirm, setShowResetConfirm] = useState<"chat" | "schedule" | null>(null);
 
-    // savedInstructionsが読み込まれたら更新
-    useState(() => {
-        if (!isLoading && savedInstructions) {
+    // Sync local state when savedInstructions loads from localStorage
+    useEffect(() => {
+        if (!isLoading) {
             setInstructions(savedInstructions);
         }
-    });
+    }, [savedInstructions, isLoading]);
 
     const handleSave = () => {
         saveInstructions(instructions);
