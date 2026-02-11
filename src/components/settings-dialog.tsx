@@ -13,33 +13,8 @@ interface SettingsDialogProps {
     onClose: () => void;
 }
 
-const DEFAULT_INSTRUCTIONS = `# 家族構成
-- 私（パパ）: IT企業勤務
-- 妻: 病院勤務
-- 長女（ひなの）: 小学校3年生
-- 次女（ゆみの）: 小学校2年生
-- 長男（きよみつ）: 保育園・6歳
-- 三女（ちさの）: 保育園・3歳
-
-# 日常ルーティン
-- 06:00 起床
-- 07:20 保育園組が妻と出発
-- 07:30 長女・次女が学校へ
-- 16:30 長女帰宅
-- 18:00 入浴開始
-- 19:30 夕食
-- 21:00 就寝
-
-# リソース
-- ファミリーカー1台
-- 衣類乾燥機（乾太くん）
-- おじいちゃん（妻の実家）がサポート可能
-
-# 習慣・その他
-- 毎朝7:00〜7:25にトイレタイム
-- 木曜日は長女のピアノ教室
-- 水曜・土曜は燃えるゴミの日
-`;
+// カスタム指示のデフォルト値（空欄）
+const DEFAULT_INSTRUCTIONS = "";
 
 export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps) {
     const { value: savedInstructions, setValue: saveInstructions, isLoading } = useCustomInstructions();

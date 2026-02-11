@@ -96,8 +96,8 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
         setToastError(null);
 
         try {
-            // Prepare messages context (last 10 messages + new one)
-            const historyContext = messages.slice(-10).map(m => ({
+            // Prepare messages context (last 5 messages + new one)
+            const historyContext = messages.slice(-5).map(m => ({
                 role: m.role,
                 content: m.content
             }));
@@ -220,7 +220,7 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
             }).map(m => m.id === messageId ? { ...m, content: newContent } : m);
 
             // Prepare messages context
-            const historyContext = currentMessages.slice(-10).map(m => ({
+            const historyContext = currentMessages.slice(-5).map(m => ({
                 role: m.role,
                 content: m.content
             }));

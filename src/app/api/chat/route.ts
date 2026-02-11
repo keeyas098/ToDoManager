@@ -1,86 +1,22 @@
 import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
 
-// Default user context for demo - Japanese family
-const defaultUserContext = {
-    family_structure: {
-        members: [
-            { name: "あなた", relationship: "本人", workplace: "IT企業" },
-            { name: "パートナー", relationship: "配偶者", workplace: "病院" },
-            { name: "ゆうき", relationship: "息子", age: 5, school: "ひまわり幼稚園" },
-            { name: "はな", relationship: "娘", age: 8, school: "さくら小学校" },
-        ],
-    },
-    resources: {
-        vehicles: ["ファミリーカー"],
-        nearby_facilities: ["スーパー (5分)", "クリニック (10分)", "公園 (3分)"],
-        support_network: ["おばあちゃん (週末に助けてくれる)"],
-    },
-    routines: [
-        { name: "起床", time: "06:30", days: ["月", "火", "水", "木", "金"] },
-        { name: "子供を学校へ", time: "08:00", days: ["月", "火", "水", "木", "金"] },
-        { name: "仕事開始", time: "09:00", days: ["月", "火", "水", "木", "金"] },
-        { name: "子供のお迎え", time: "15:30", days: ["月", "火", "水", "木", "金"] },
-        { name: "夕食", time: "18:30", days: ["月", "火", "水", "木", "金", "土", "日"] },
-        { name: "子供の就寝", time: "20:30", days: ["月", "火", "水", "木", "金", "土", "日"] },
-    ],
-};
-
 // Function to generate system prompt with current time (called per request)
-const getSystemPrompt = () => {
-    const now = new Date();
-    const currentDateTime = now.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
-    const currentTime = now.toLocaleTimeString("ja-JP", { timeZone: "Asia/Tokyo", hour: "2-digit", minute: "2-digit", hour12: false });
+const getSystemPrompt = (currentTime: string) => {
+    return `あなたはスケジュール管理AIです。ユーザーの状況に応じてスケジュールをJSON形式で更新します。
 
-    return `あなたは「ToDoManager AIアシスタント」、ユーザーの「第二の脳」として機能するスケジュール管理アシスタントです。
+現在時刻: ${currentTime}
 
-忙しい親が日々のスケジュールを動的に管理するのを助けます。状況や文脈の変化に応じてスケジュールをインテリジェントに更新します。
+応答は必ず以下のJSON形式で返してください:
+{"tasks":[{"id":"task-[timestamp]-[random]","time":"HH:mm","title":"タスク名","description":"説明","duration":30,"priority":"high|medium|low","status":"pending","category":"work|family|personal|health|errand"}],"message":"説明メッセージ","reasoning":"理由"}
 
-現在のユーザーコンテキスト（デフォルト値）:
-${JSON.stringify(defaultUserContext, null, 2)}
-
-※「ユーザー定義のコンテキスト」が提供された場合は、そちらを優先してください。
-
-【重要】現在の日時: ${currentDateTime}（現在時刻: ${currentTime}）
-
-あなたの責任:
-1. ユーザーが状況を報告した場合（例：「息子が熱を出した」「雨が降っている」「今日は在宅勤務」）、スケジュールへの影響を分析する
-2. 実用的な時間と説明を含むJSON形式の更新されたスケジュールを生成する
-3. 推奨事項を説明するサポート的でアクション可能なメッセージを提供する
-4. 代替案を提案する際は、家族のリソースとサポートネットワークを考慮する
-
-応答フォーマット:
-以下の正確なフォーマットで有効なJSONで応答してください:
-{
-  "tasks": [
-    {
-      "id": "一意のID",
-      "time": "HH:mm",
-      "title": "タスクのタイトル",
-      "description": "簡単な説明（任意）",
-      "duration": 30,
-      "priority": "high" | "medium" | "low",
-      "status": "pending",
-      "category": "work" | "family" | "personal" | "health" | "errand"
-    }
-  ],
-  "message": "スケジュールの変更を説明するサポートメッセージ",
-  "affectedTasks": ["id1", "id2"],
-  "reasoning": "これらの変更を行った理由の簡単な説明"
-}
-
-ガイドライン:
-- 【超重要】スケジュールの時刻は必ず現在時刻（${currentTime}）より後の未来の時刻にする。過去の時刻は絶対に設定しない！
-- 深夜（0:00〜5:00）の場合は、今日中のタスクか翌日のタスクかを明確にする
-- メッセージは共感的でサポート的に
-- 家族、特に子供の健康を最優先する
-- 計画を変更する必要がある場合は実用的な代替案を提案する
-- スケジュールは現実的で達成可能なものにする
-- 24時間形式を使用する（例：「09:00」「15:30」）
-- タスクIDは「task-{タイムスタンプ}-{ランダム}」の形式で生成する
-- 日本語で応答してください
-
-ユーザーが一般的な質問をしたり、スケジュールの変更なしにアドバイスが必要な場合でも、tasksを空の配列にしてメッセージをmessageフィールドに入れたJSON形式で応答してください。`;
+ルール:
+- 時刻は必ず${currentTime}以降の未来のみ。過去の時刻は禁止
+- 深夜0:00-5:00は当日残り or 翌朝のタスクを提案
+- 完了済みタスクは再スケジュールしない
+- 24時間形式（09:00, 15:30）
+- 日本語で応答
+- スケジュール変更なしの場合もJSON形式（tasksは空配列）で応答`;
 };
 
 // Allow responses up to 30 seconds
@@ -90,39 +26,41 @@ export async function POST(req: Request) {
     try {
         const { messages, currentSchedule, completedTasks, customInstructions, conversationSummary, currentTime } = await req.json();
 
-        // Generate system prompt with current time (fresh on each request)
-        let enhancedPrompt = getSystemPrompt();
+        // Use client time or generate server-side
+        const now = new Date();
+        const timeStr = currentTime || `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
-        // Add extra emphasis on current time from client
-        if (currentTime) {
-            enhancedPrompt += `\n\n⚠️ 絶対重要 ⚠️: ユーザーの現在時刻は ${currentTime} です。\nタスクの時刻は必ず ${currentTime} より後（未来）の時刻のみを設定してください。\n例：現在 01:00 なら 01:15, 01:30, 02:00 など。22:00や23:00など過去の時刻は絶対に使用禁止！`;
+        // Build optimized prompt
+        let prompt = getSystemPrompt(timeStr);
+
+        // Custom instructions (highest priority - user's personal context)
+        if (customInstructions && customInstructions.trim()) {
+            prompt += `\n\n【ユーザー情報 - 必ずスケジュールに反映】\n${customInstructions}`;
         }
 
-        if (customInstructions) {
-            enhancedPrompt += `\n\n# ユーザー定義のコンテキスト（最重要：必ず参照し、スケジュールに反映すること）\n${customInstructions}`;
-        }
-
-        if (conversationSummary) {
-            enhancedPrompt += `\n\n# 会話履歴と学習した習慣\n${conversationSummary}`;
-        }
-
-        // Add completed tasks info so AI doesn't reschedule them
+        // Completed tasks (don't reschedule these)
         if (completedTasks && completedTasks.length > 0) {
-            enhancedPrompt += `\n\n# 完了済みタスク（これらは再スケジュールしないでください）\n以下のタスクはユーザーが完了済みとマークしました。新しいスケジュールにこれらを含めないでください：\n${JSON.stringify(completedTasks, null, 2)}`;
+            prompt += `\n\n【完了済み - 再スケジュール禁止】\n${completedTasks.map((t: { title: string, time: string }) => `✓ ${t.time} ${t.title}`).join('\n')}`;
         }
 
+        // Current pending schedule
         if (currentSchedule && currentSchedule.length > 0) {
-            enhancedPrompt += `\n\n現在のスケジュール（未来の未完了タスクのみ）:\n${JSON.stringify(currentSchedule, null, 2)}`;
-        } else {
-            enhancedPrompt += `\n\n現在のスケジュール: なし（新規でスケジュールを作成してください）`;
+            prompt += `\n\n【現在の未完了スケジュール】\n${JSON.stringify(currentSchedule)}`;
         }
 
+        // Brief conversation context
+        if (conversationSummary && conversationSummary.trim()) {
+            prompt += `\n\n【最近の会話】${conversationSummary}`;
+        }
+
+        // Limit messages to last 5 for cost reduction
+        const recentMessages = Array.isArray(messages) ? messages.slice(-5) : messages;
 
         // Use generateText for non-streaming reliable response
         const result = await generateText({
             model: google("gemini-2.5-flash-lite-preview-09-2025"),
-            system: enhancedPrompt,
-            messages,
+            system: prompt,
+            messages: recentMessages,
         });
 
         // Return text response

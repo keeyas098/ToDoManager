@@ -2,34 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-// カスタム指示のデフォルト値
-const DEFAULT_INSTRUCTIONS = `# 家族構成
-- 私（パパ）: IT企業勤務
-- 妻: 病院勤務
-- 長女（ひなの）: 小学校3年生
-- 次女（ゆみの）: 小学校2年生
-- 長男（きよみつ）: 保育園・6歳
-- 三女（ちさの）: 保育園・3歳
-
-# 日常ルーティン
-- 06:00 起床
-- 07:20 保育園組が妻と出発
-- 07:30 長女・次女が学校へ
-- 16:30 長女帰宅
-- 18:00 入浴開始
-- 19:30 夕食
-- 21:00 就寝
-
-# リソース
-- ファミリーカー1台
-- 衣類乾燥機（乾太くん）
-- おじいちゃん（妻の実家）がサポート可能
-
-# 習慣・その他
-- 毎朝7:00〜7:25にトイレタイム
-- 木曜日は長女のピアノ教室
-- 水曜・土曜は燃えるゴミの日
-`;
+// カスタム指示のデフォルト値（空欄：ユーザーが自分で入力する）
+const DEFAULT_INSTRUCTIONS = "";
 
 interface UseLocalStorageReturn<T> {
     value: T;
@@ -128,31 +102,17 @@ export function useChatHistory() {
         [value]
     );
 
-    // 会話サマリーを生成（最新10件 + 重要なポイント）
+    // 会話サマリーを生成（コスト削減：簡潔に）
     const getConversationSummary = useCallback(() => {
         if (value.length === 0) return "";
 
-        const recent = value.slice(-10);
-        const summaryLines: string[] = [];
+        // 直近5件のユーザーメッセージだけ簡潔にまとめる
+        const recentUserMsgs = value.filter(m => m.role === "user").slice(-5);
+        if (recentUserMsgs.length === 0) return "";
 
-        // 最近の会話をまとめる
-        summaryLines.push("# 最近の会話履歴");
-        recent.forEach((msg, i) => {
-            const role = msg.role === "user" ? "ユーザー" : "AI";
-            const content = msg.content.length > 100
-                ? msg.content.substring(0, 100) + "..."
-                : msg.content;
-            summaryLines.push(`${i + 1}. ${role}: ${content}`);
-        });
-
-        // 学習した習慣パターンを抽出
-        const habits = extractHabits(value);
-        if (habits.length > 0) {
-            summaryLines.push("\n# 学習した習慣パターン");
-            habits.forEach(habit => summaryLines.push(`- ${habit}`));
-        }
-
-        return summaryLines.join("\n");
+        return recentUserMsgs.map(m =>
+            m.content.length > 60 ? m.content.substring(0, 60) + "..." : m.content
+        ).join(" / ");
     }, [value]);
 
     // 習慣パターンを抽出
