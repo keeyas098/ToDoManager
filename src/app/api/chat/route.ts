@@ -88,7 +88,7 @@ export const maxDuration = 30;
 
 export async function POST(req: Request) {
     try {
-        const { messages, currentSchedule, customInstructions, conversationSummary, currentTime } = await req.json();
+        const { messages, currentSchedule, completedTasks, customInstructions, conversationSummary, currentTime } = await req.json();
 
         // Generate system prompt with current time (fresh on each request)
         let enhancedPrompt = getSystemPrompt();
@@ -99,15 +99,20 @@ export async function POST(req: Request) {
         }
 
         if (customInstructions) {
-            enhancedPrompt += `\n\n# ユーザー定義のコンテキスト\n以下の情報を優先して参照してください:\n${customInstructions}`;
+            enhancedPrompt += `\n\n# ユーザー定義のコンテキスト（最重要：必ず参照し、スケジュールに反映すること）\n${customInstructions}`;
         }
 
         if (conversationSummary) {
             enhancedPrompt += `\n\n# 会話履歴と学習した習慣\n${conversationSummary}`;
         }
 
+        // Add completed tasks info so AI doesn't reschedule them
+        if (completedTasks && completedTasks.length > 0) {
+            enhancedPrompt += `\n\n# 完了済みタスク（これらは再スケジュールしないでください）\n以下のタスクはユーザーが完了済みとマークしました。新しいスケジュールにこれらを含めないでください：\n${JSON.stringify(completedTasks, null, 2)}`;
+        }
+
         if (currentSchedule && currentSchedule.length > 0) {
-            enhancedPrompt += `\n\n現在のスケジュール（未来のタスクのみ）:\n${JSON.stringify(currentSchedule, null, 2)}`;
+            enhancedPrompt += `\n\n現在のスケジュール（未来の未完了タスクのみ）:\n${JSON.stringify(currentSchedule, null, 2)}`;
         } else {
             enhancedPrompt += `\n\n現在のスケジュール: なし（新規でスケジュールを作成してください）`;
         }

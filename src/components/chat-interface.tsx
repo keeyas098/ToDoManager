@@ -110,14 +110,26 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
             // Get conversation summary for context
             const conversationSummary = getConversationSummary();
 
+            // Filter tasks and prepare schedule info for AI
+            const now = new Date();
+            const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+            // Separate completed tasks from pending/future tasks
+            const completedTasks = currentSchedule.filter(task => task.status === "completed");
+            const pendingFutureTasks = currentSchedule.filter(task =>
+                task.status !== "completed" && task.status !== "cancelled" && task.time >= currentTimeStr
+            );
+
             const response = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     messages: historyContext,
-                    currentSchedule,
+                    currentSchedule: pendingFutureTasks,
+                    completedTasks: completedTasks.map(t => ({ title: t.title, time: t.time })),
                     customInstructions,
                     conversationSummary,
+                    currentTime: currentTimeStr,
                 }),
             });
 
@@ -135,15 +147,27 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
 
             // Try to parse the response as JSON schedule update
             try {
-                const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-                const jsonStr = jsonMatch ? jsonMatch[1].trim() : text.trim();
+                let jsonStr = text.trim();
+
+                // Try to extract JSON from markdown code block first
+                const jsonMatch = text.match(/```(?:json)?[\s\n]*(\{[\s\S]*?\})[\s\n]*```/);
+                if (jsonMatch) {
+                    jsonStr = jsonMatch[1].trim();
+                } else {
+                    // Try to find raw JSON object in the response
+                    const rawJsonMatch = text.match(/\{[\s\S]*"tasks"[\s\S]*\}/);
+                    if (rawJsonMatch) {
+                        jsonStr = rawJsonMatch[0];
+                    }
+                }
+
                 const scheduleUpdate = JSON.parse(jsonStr) as ScheduleUpdate;
-                if (scheduleUpdate.tasks && Array.isArray(scheduleUpdate.tasks)) {
+                if (scheduleUpdate.tasks && Array.isArray(scheduleUpdate.tasks) && scheduleUpdate.tasks.length > 0) {
+                    console.log("スケジュール更新を検出:", scheduleUpdate.tasks.length, "件のタスク");
                     onScheduleUpdate(scheduleUpdate);
                 }
             } catch {
-                // Not a JSON response, that's okay
-                console.log("スケジュール更新ではありません");
+                console.log("スケジュール更新ではありません（JSONパース失敗）");
             }
         } catch (err) {
             const errorMsg = err instanceof Error ? err.message : "不明なエラー";
@@ -206,17 +230,23 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
             // Filter out past tasks to prevent AI from scheduling past times
             const now = new Date();
             const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-            const futureSchedule = currentSchedule.filter(task => task.time >= currentTimeStr);
+
+            // Separate completed tasks from pending/future tasks
+            const completedTasks = currentSchedule.filter(task => task.status === "completed");
+            const pendingFutureTasks = currentSchedule.filter(task =>
+                task.status !== "completed" && task.status !== "cancelled" && task.time >= currentTimeStr
+            );
 
             const response = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     messages: historyContext,
-                    currentSchedule: futureSchedule,
+                    currentSchedule: pendingFutureTasks,
+                    completedTasks: completedTasks.map(t => ({ title: t.title, time: t.time })),
                     customInstructions,
                     conversationSummary,
-                    currentTime: currentTimeStr, // Send current time explicitly
+                    currentTime: currentTimeStr,
                 }),
             });
 
