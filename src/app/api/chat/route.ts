@@ -31,7 +31,12 @@ const getSystemPrompt = () => {
 ⏰ 現在: ${dateStr}（${weekday}）${timeStr}
 
 応答は必ず以下のJSON形式で返してください:
-{"tasks":[{"id":"task-[timestamp]-[random]","time":"HH:mm","title":"タスク名","description":"説明","duration":30,"priority":"high|medium|low","status":"pending","category":"work|family|personal|health|errand"}],"message":"説明メッセージ","reasoning":"理由"}
+{"tasks":[{"id":"task-[timestamp]-[random]","time":"HH:mm","title":"タスク名","description":"アドバイス1行目\\nアドバイス2行目","duration":30,"priority":"high|medium|low","status":"pending","category":"work|family|personal|health|errand"}],"message":"説明メッセージ","reasoning":"理由"}
+
+【descriptionの書き方】
+- タスク遂行のための具体的なアドバイスや手順を書く
+- 一文ごとに改行（\\n）で区切る
+- 例: "まず食材を確認しましょう\\n冷蔵庫の残り物から献立を決めると効率的です\\n子供の好きなメニューも1品入れましょう"
 
 【厳格ルール - 時刻】
 - 全タスクの時刻は必ず ${timeStr} 以降（未来）のみ。${timeStr}以前の時刻は絶対禁止

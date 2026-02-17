@@ -142,9 +142,11 @@ export function Timeline({ tasks, onTaskClick, onTaskToggle }: TimelineProps) {
                                         )}
                                     </div>
                                     {task.description && (
-                                        <p className="text-xs text-muted-foreground break-words">
-                                            {task.description}
-                                        </p>
+                                        <div className="text-xs text-muted-foreground break-words space-y-0.5 mt-0.5">
+                                            {task.description.split('\n').map((line, i) => (
+                                                <p key={i}>{line}</p>
+                                            ))}
+                                        </div>
                                     )}
                                 </div>
                             </div>
