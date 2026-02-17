@@ -3,9 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { Settings, Save, RotateCcw, X, User, Clock, Car, Sparkles, Trash2 } from "lucide-react";
+import { Settings, Save, RotateCcw, X, Trash2 } from "lucide-react";
 import { useCustomInstructions, useChatHistory } from "@/hooks/use-local-storage";
 
 interface SettingsDialogProps {
@@ -70,30 +68,13 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps) {
 
                 {/* Scrollable content area for mobile */}
                 <div className="flex-1 overflow-y-auto min-h-0">
-                    {/* Help badges */}
-                    <div className="flex flex-wrap gap-2 px-3 md:px-4 pt-3 md:pt-4">
-                        <Badge variant="outline" className="gap-1 text-xs">
-                            <User className="w-3 h-3" />
-                            家族構成
-                        </Badge>
-                        <Badge variant="outline" className="gap-1 text-xs">
-                            <Clock className="w-3 h-3" />
-                            ルーティン
-                        </Badge>
-                        <Badge variant="outline" className="gap-1 text-xs">
-                            <Car className="w-3 h-3" />
-                            リソース
-                        </Badge>
-                        <Badge variant="outline" className="gap-1 text-xs">
-                            <Sparkles className="w-3 h-3" />
-                            習慣
-                        </Badge>
+                    {/* カスタム指示 title */}
+                    <div className="px-3 md:px-4 pt-3 md:pt-4">
+                        <h3 className="text-sm font-semibold text-foreground">📝 カスタム指示</h3>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            AIがスケジュール調整時に参照する情報を記入してください。
+                        </p>
                     </div>
-
-                    {/* Description */}
-                    <p className="px-3 md:px-4 pt-2 text-xs md:text-sm text-muted-foreground">
-                        AIがスケジュール調整時に参照する情報を記入してください。
-                    </p>
 
                     {/* Textarea - scrollable on mobile */}
                     <div className="p-3 md:p-4">
