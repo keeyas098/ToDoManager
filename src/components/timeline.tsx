@@ -61,10 +61,24 @@ export function Timeline({ tasks, onTaskClick, onTaskToggle }: TimelineProps) {
 
     if (activeTasks.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-4 md:p-8">
-                <AlertCircle className="w-8 h-8 md:w-12 md:h-12 mb-2 md:mb-4 opacity-50" />
-                <p className="text-sm md:text-lg font-medium">残りのスケジュールはありません</p>
-                <p className="text-xs md:text-sm opacity-70">AIにチャットして追加しましょう</p>
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-4 md:p-8 gap-4">
+                <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <AlertCircle className="w-7 h-7 md:w-8 md:h-8 text-primary opacity-80" />
+                </div>
+                <div className="text-center space-y-2">
+                    <p className="text-sm md:text-lg font-semibold text-foreground">スケジュールがありません</p>
+                    <p className="text-xs md:text-sm opacity-80 leading-relaxed max-w-xs">
+                        💬 <span className="font-medium text-foreground/80">チャットタブ</span>からAIに話しかけて、
+                        <br />今日のスケジュールを作成しましょう！
+                    </p>
+                </div>
+                <div className="mt-2 p-3 rounded-lg bg-muted/50 max-w-xs">
+                    <p className="text-xs opacity-70 leading-relaxed text-center">
+                        💡 <span className="font-medium">ヒント：</span>
+                        ⚙️ 設定画面の「カスタム指示」に家族構成やルーティンを入力すると、
+                        あなたに合った詳細なスケジュールを組めます
+                    </p>
+                </div>
             </div>
         );
     }
