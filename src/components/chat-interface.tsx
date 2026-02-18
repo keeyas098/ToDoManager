@@ -429,14 +429,11 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
                     <textarea
                         ref={textareaRef}
                         value={input}
-                        onChange={(e) => {
-                            setInput(e.target.value);
-                            // Auto-resize textarea
-                            e.target.style.height = 'auto';
-                            e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
-                        }}
+                        onChange={(e) => setInput(e.target.value)}
                         onFocus={handleInputFocus}
                         onKeyDown={(e) => {
+                            // Ignore key events during IME composition (e.g. Japanese input)
+                            if (e.nativeEvent.isComposing || e.key === 'Process') return;
                             // Desktop only: Submit on Enter without Shift
                             // Mobile: Enter adds newline, users tap send button
                             const isMobile = window.innerWidth < 768;
@@ -449,8 +446,9 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
                         }}
                         placeholder="状況を入力..."
                         disabled={isApiLoading}
-                        rows={1}
-                        className="flex-1 bg-muted border-0 rounded-md px-3 py-2 resize-none overflow-hidden focus:outline-none focus:ring-1 focus:ring-primary text-xs md:text-base min-h-[32px] md:min-h-[40px] max-h-[100px]"
+                        rows={2}
+                        className="flex-1 bg-muted border-0 rounded-md px-3 py-2 resize-none overflow-y-auto focus:outline-none focus:ring-1 focus:ring-primary text-xs md:text-base min-h-[32px] md:min-h-[40px] max-h-[120px]"
+                        style={{ fieldSizing: 'content' } as React.CSSProperties}
                     />
                     <Button
                         type="submit"

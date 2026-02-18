@@ -50,7 +50,7 @@ export function CollapsibleMessage({ content, isUser, onEdit, className }: Colla
                 <textarea
                     value={editContent}
                     onChange={(e) => setEditContent(e.target.value)}
-                    className="w-full min-h-[60px] p-2 text-xs md:text-sm bg-background/50 rounded border-0 resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full min-h-[60px] max-h-[200px] p-2 text-xs md:text-sm bg-background/50 rounded border-0 resize-none overflow-y-auto focus:outline-none focus:ring-1 focus:ring-primary"
                     autoFocus
                 />
                 <div className="flex justify-end gap-1 mt-1">
