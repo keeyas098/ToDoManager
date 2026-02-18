@@ -186,15 +186,41 @@ export function Dashboard() {
                 </button>
             </div>
 
-            {/* Main content - Split view on desktop, tabs on mobile with swipe */}
+            {/* Main content - Split view on desktop, slide on mobile with swipe */}
             <div
-                className="flex-1 flex flex-col lg:flex-row min-h-0"
+                className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden"
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
             >
-                {/* Timeline section - hidden on mobile when chat tab is active */}
-                <div className={`flex-1 lg:w-1/2 lg:border-r min-h-0 ${activeTab === "chat" ? "hidden lg:flex lg:flex-col" : "flex flex-col"}`}>
-                    <div className="hidden lg:flex items-center gap-2 px-4 py-3 border-b bg-background/50">
+                {/* Mobile sliding container */}
+                <div
+                    className="flex lg:hidden flex-1 min-h-0 transition-transform duration-300 ease-in-out"
+                    style={{
+                        width: '200%',
+                        transform: activeTab === "chat" ? 'translateX(-50%)' : 'translateX(0)',
+                    }}
+                >
+                    {/* Timeline section - mobile */}
+                    <div className="w-1/2 flex flex-col min-h-0">
+                        <div className="flex-1 min-h-0 overflow-auto">
+                            <Timeline tasks={tasks} onTaskToggle={handleTaskToggle} />
+                        </div>
+                    </div>
+
+                    {/* Chat section - mobile */}
+                    <div className="w-1/2 flex flex-col min-h-0">
+                        <div className="flex-1 min-h-0 overflow-auto">
+                            <ChatInterface
+                                currentSchedule={tasks}
+                                onScheduleUpdate={handleScheduleUpdate}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Desktop: side-by-side (unchanged) */}
+                <div className="hidden lg:flex lg:flex-col lg:w-1/2 lg:border-r min-h-0">
+                    <div className="flex items-center gap-2 px-4 py-3 border-b bg-background/50">
                         <Calendar className="w-4 h-4 text-primary" />
                         <h2 className="font-semibold text-foreground">📅 {new Date().toLocaleDateString("ja-JP", { month: "long", day: "numeric" })}のスケジュール</h2>
                     </div>
@@ -203,9 +229,8 @@ export function Dashboard() {
                     </div>
                 </div>
 
-                {/* Chat section - hidden on mobile when schedule tab is active */}
-                <div className={`flex-1 lg:w-1/2 min-h-0 ${activeTab === "schedule" ? "hidden lg:flex lg:flex-col" : "flex flex-col"}`}>
-                    <div className="hidden lg:flex items-center gap-2 px-4 py-3 border-b bg-background/50">
+                <div className="hidden lg:flex lg:flex-col lg:w-1/2 min-h-0">
+                    <div className="flex items-center gap-2 px-4 py-3 border-b bg-background/50">
                         <MessageSquare className="w-4 h-4 text-primary" />
                         <h2 className="font-semibold text-foreground">AIアシスタント</h2>
                     </div>

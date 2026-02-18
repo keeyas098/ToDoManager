@@ -307,11 +307,10 @@ export function ChatInterface({ currentSchedule, onScheduleUpdate }: ChatInterfa
 
             {/* Chat header - compact on mobile */}
             <div className="flex items-center gap-2 md:gap-3 p-2 md:p-4 border-b bg-gradient-to-r from-primary/10 to-purple-500/10">
-                <div className="relative">
+                <div>
                     <div className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center">
                         <Bot className="w-3.5 h-3.5 md:w-5 md:h-5 text-white" />
                     </div>
-                    <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 md:w-3 md:h-3 bg-green-500 rounded-full border-2 border-background" />
                 </div>
                 <div>
                     <h3 className="font-semibold text-foreground text-sm md:text-base">AIアシスタント</h3>

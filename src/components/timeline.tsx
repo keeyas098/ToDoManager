@@ -22,26 +22,11 @@ interface TimelineProps {
     onTaskToggle?: (taskId: string, completed: boolean) => void;
 }
 
-const priorityColors = {
-    high: "bg-red-500",
-    medium: "bg-yellow-500",
-    low: "bg-green-500",
-};
-
 const statusIcons = {
     pending: Circle,
     "in-progress": Clock,
     completed: CheckCircle2,
     cancelled: XCircle,
-};
-
-// Category config with emoji and label
-const categoryConfig: Record<string, { emoji: string; label: string }> = {
-    work: { emoji: "💼", label: "仕事" },
-    family: { emoji: "👨‍👩‍👧", label: "家族" },
-    personal: { emoji: "🧘", label: "自分" },
-    health: { emoji: "💪", label: "健康" },
-    errand: { emoji: "🛒", label: "用事" },
 };
 
 // Get current time as HH:MM string
@@ -138,7 +123,8 @@ export function Timeline({ tasks, onTaskClick, onTaskToggle }: TimelineProps) {
                     const isCurrent = index === currentTaskIndex;
                     const isPast = currentTaskIndex > index;
                     const isFadingOut = fadingOutIds.has(task.id);
-                    const category = task.category ? categoryConfig[task.category] : null;
+                    // Category badges removed per user feedback
+
 
                     return (
                         <Card
@@ -203,34 +189,15 @@ export function Timeline({ tasks, onTaskClick, onTaskToggle }: TimelineProps) {
 
                                 {/* Content - with word wrap for mobile */}
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex items-start gap-1.5">
-                                        <h3 className="font-medium text-foreground text-sm md:text-base break-words">
-                                            {task.title}
-                                        </h3>
-                                        {/* Category badge */}
-                                        {category && (
-                                            <span
-                                                className="flex-shrink-0 text-[10px] md:text-xs px-1 py-0.5 rounded-full bg-muted/80 mt-0.5"
-                                                title={category.label}
-                                            >
-                                                {category.emoji}
-                                            </span>
-                                        )}
-                                        {task.priority && (
-                                            <div
-                                                className={cn(
-                                                    "w-1.5 h-1.5 md:w-2 md:h-2 rounded-full flex-shrink-0 mt-1.5",
-                                                    priorityColors[task.priority]
-                                                )}
-                                            />
-                                        )}
-                                    </div>
+                                    <h3 className="font-medium text-foreground text-sm md:text-base break-words">
+                                        {task.title}
+                                    </h3>
                                     {/* Description with emoji bullets */}
                                     {task.description && (
                                         <div className="text-xs text-muted-foreground break-words space-y-0.5 mt-1">
                                             {task.description.split('\n').filter(line => line.trim()).map((line, i) => (
                                                 <p key={i} className="flex items-start gap-1">
-                                                    <span className="flex-shrink-0 leading-relaxed">✔️</span>
+                                                    <span className="flex-shrink-0 text-muted-foreground/60">･</span>
                                                     <span className="leading-relaxed">{line}</span>
                                                 </p>
                                             ))}
